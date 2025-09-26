@@ -27,7 +27,20 @@ void main() {
         weightKg: 80,
         restSeconds: 60,
       );
-      expect(exercise.volume, closeTo(4 * 10 * 80, 0.01));
+      expect(exercise.volume, 4 * 8 * 80);
+    });
+
+    test('usa primeiro valor numérico quando há múltiplas repetições informadas', () {
+      final exercise = ExerciseEntry(
+        id: null,
+        name: 'Supino',
+        muscleGroup: 'Peito',
+        sets: 3,
+        reps: '10/8/6',
+        weightKg: 50,
+        restSeconds: 45,
+      );
+      expect(exercise.volume, 3 * 10 * 50);
     });
   });
 }

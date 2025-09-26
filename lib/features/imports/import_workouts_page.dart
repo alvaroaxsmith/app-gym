@@ -29,6 +29,7 @@ class _ImportWorkoutsPageState extends State<ImportWorkoutsPage> {
         allowedExtensions: ['csv', 'json'],
       );
       if (result == null) return;
+      if (!mounted) return;
       final file = result.files.single;
       if (file.bytes == null) {
         showSnack(context, 'Não foi possível ler o arquivo selecionado.', isError: true);
@@ -74,7 +75,7 @@ class _ImportWorkoutsPageState extends State<ImportWorkoutsPage> {
       'weight_kg',
       'rest_seconds',
     ];
-    if (!ListEquality().equals(header, expected)) {
+  if (!const ListEquality().equals(header, expected)) {
       throw const FormatException('Cabeçalho CSV inválido');
     }
     final grouped = <DateTime, List<ExerciseEntry>>{};
@@ -163,10 +164,16 @@ class _ImportWorkoutsPageState extends State<ImportWorkoutsPage> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.4),
                 width: 1.5,
               ),
-              color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.15),
+              color: Theme.of(context)
+                  .colorScheme
+                  .primaryContainer
+                  .withValues(alpha: 0.15),
             ),
             child: Column(
               children: [

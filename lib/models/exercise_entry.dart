@@ -20,19 +20,19 @@ class ExerciseEntry {
   double get volume => sets * _repsAsNumber * weightKg;
 
   double get _repsAsNumber {
-    final parsed = double.tryParse(reps);
-    if (parsed != null) {
-      return parsed;
+    final numericValue = double.tryParse(reps.trim());
+    if (numericValue != null) {
+      return numericValue;
     }
-    final match = RegExp(r"(\d+)").allMatches(reps);
-    if (match.isEmpty) {
-      return 0;
+    final match = RegExp(r'^(\d+(?:\.\d+)?)').firstMatch(reps.trim());
+    if (match != null) {
+      return double.tryParse(match.group(1) ?? '') ?? 0;
     }
-    final values = match.map((m) => double.tryParse(m.group(0) ?? '') ?? 0).toList();
-    if (values.isEmpty) {
-      return 0;
+    final fallback = RegExp(r'(\d+(?:\.\d+)?)').firstMatch(reps);
+    if (fallback != null) {
+      return double.tryParse(fallback.group(1) ?? '') ?? 0;
     }
-    return values.reduce((a, b) => a + b) / values.length;
+    return 0;
   }
 
   ExerciseEntry copyWith({

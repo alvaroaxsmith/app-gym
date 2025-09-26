@@ -132,7 +132,7 @@ class _WorkoutFormSheetState extends State<WorkoutFormSheet> {
                               ),
                               const SizedBox(height: 8),
                               DropdownButtonFormField<String>(
-                                value: item.muscleGroup,
+                                initialValue: item.muscleGroup,
                                 decoration: const InputDecoration(labelText: 'Grupo muscular'),
                                 items: kMuscleGroups
                                     .map(

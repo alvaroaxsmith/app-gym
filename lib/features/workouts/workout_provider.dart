@@ -11,7 +11,6 @@ class WorkoutProvider extends ChangeNotifier {
 
   Map<DateTime, Workout> _workoutsByDay = {};
   Workout? _selectedWorkout;
-  DateTime _focusedMonth = _onlyMonth(DateTime.now());
   DateTime _selectedDate = _onlyDate(DateTime.now());
   bool _isLoading = false;
   bool _isSaving = false;
@@ -32,7 +31,6 @@ class WorkoutProvider extends ChangeNotifier {
   }
 
   Future<void> loadMonth(DateTime month) async {
-    _focusedMonth = _onlyMonth(month);
     _setLoading(true);
     try {
       _workoutsByDay = await _repository.fetchWorkoutsForMonth(month);
@@ -149,5 +147,4 @@ class WorkoutProvider extends ChangeNotifier {
   }
 
   static DateTime _onlyDate(DateTime date) => DateTime(date.year, date.month, date.day);
-  static DateTime _onlyMonth(DateTime date) => DateTime(date.year, date.month);
 }

@@ -1,7 +1,6 @@
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../models/exercise_entry.dart';
 import '../../models/workout.dart';
 
 class WorkoutRepository {

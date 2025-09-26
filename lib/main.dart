@@ -27,7 +27,7 @@ Future<void> main() async {
     await dotenv.load(fileName: '.env', isOptional: true);
   } catch (e) {
     // Ignorar erro em produção onde .env não existe
-    print('Info: arquivo .env não encontrado, usando --dart-define');
+  debugPrint('Info: arquivo .env não encontrado, usando --dart-define');
   }
   
   final supabaseUrl =

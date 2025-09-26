@@ -218,16 +218,26 @@ class _DetailsSection extends StatelessWidget {
               Builder(
                 builder: (context) {
                   final currentWorkout = workout!;
+                  final dailyVolume = currentWorkout.exercises.fold<double>(
+                    0,
+                    (acc, exercise) => acc + exercise.volume,
+                  );
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text('Volume total: ${currentWorkout.totalVolume.toStringAsFixed(0)} kg'),
+                      Text('Volume total do dia: ${dailyVolume.toStringAsFixed(0)} kg'),
                       const SizedBox(height: 12),
                       ...currentWorkout.exercises.map(
                         (exercise) => Card(
                           child: ListTile(
                             title: Text(exercise.name),
-                            subtitle: Text('${exercise.muscleGroup} • ${exercise.sets}x${exercise.reps} • ${exercise.weightKg}kg'),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('${exercise.muscleGroup} • ${exercise.sets}x${exercise.reps} • ${exercise.weightKg}kg'),
+                                Text('Volume: ${exercise.volume.toStringAsFixed(0)} kg'),
+                              ],
+                            ),
                             trailing: Text('${exercise.restSeconds}s'),
                           ),
                         ),
