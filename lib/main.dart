@@ -21,7 +21,15 @@ String? _normalizeEnv(String? value) {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('pt_BR');
-  await dotenv.load(fileName: '.env', isOptional: true);
+  
+  // Tentar carregar .env apenas se existir (desenvolvimento local)
+  try {
+    await dotenv.load(fileName: '.env', isOptional: true);
+  } catch (e) {
+    // Ignorar erro em produção onde .env não existe
+    print('Info: arquivo .env não encontrado, usando --dart-define');
+  }
+  
   final supabaseUrl =
       _normalizeEnv(dotenv.env['SUPABASE_URL']) ?? _normalizeEnv(_supabaseUrlDefine);
   final supabaseAnonKey =
