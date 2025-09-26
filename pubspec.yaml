@@ -1,5 +1,5 @@
-name: workout_logger_mvp
-description: MVP web app para registrar e analisar treinos de musculação.
+name: construindo_fibra
+description: App para registrar e analisar treinos de musculação.
 publish_to: 'none'
 version: 0.1.0+1
 environment:

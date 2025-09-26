@@ -1,6 +1,6 @@
-# Workout Logger MVP
+# Construindo Fibra
 
-MVP mobile-first para registrar e analisar treinos de musculação usando Flutter Web e Supabase.
+App mobile-first para registrar e analisar treinos de musculação usando Flutter Web e Supabase.
 
 ## ✨ Funcionalidades
 

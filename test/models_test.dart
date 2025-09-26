@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:workout_logger_mvp/models/exercise_entry.dart';
+import 'package:construindo_fibra/models/exercise_entry.dart';
 
 void main() {
   group('ExerciseEntry', () {

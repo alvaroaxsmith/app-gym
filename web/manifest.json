@@ -1,11 +1,11 @@
 {
-  "name": "Workout Logger",
-  "short_name": "Workout",
+  "name": "Construindo Fibra",
+  "short_name": "Fibra",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4E7FFF",
-  "description": "MVP para registrar treinos de musculação",
+  "description": "App para registrar treinos de musculação",
   "icons": [
     {
       "src": "icons/Icon-192.png",

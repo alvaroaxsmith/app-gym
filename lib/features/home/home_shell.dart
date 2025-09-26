@@ -5,6 +5,7 @@ import '../../core/ui_helpers.dart';
 import '../auth/auth_provider.dart';
 import '../dashboard/dashboard_page.dart';
 import '../imports/import_workouts_page.dart';
+import '../ranking/ranking_page.dart';
 import '../workouts/workouts_calendar_page.dart';
 
 class HomeShell extends StatefulWidget {
@@ -20,12 +21,14 @@ class _HomeShellState extends State<HomeShell> {
   final _pages = const [
     WorkoutsCalendarPage(),
     DashboardPage(),
+    RankingPage(),
     ImportWorkoutsPage(),
   ];
 
   final _titles = const [
     'Calendário',
     'Dashboard',
+    'Ranking',
     'Importar',
   ];
 
@@ -63,6 +66,7 @@ class _HomeShellState extends State<HomeShell> {
         destinations: const [
           NavigationDestination(icon: Icon(Icons.calendar_month), label: 'Calendário'),
           NavigationDestination(icon: Icon(Icons.leaderboard), label: 'Dashboard'),
+          NavigationDestination(icon: Icon(Icons.emoji_events), label: 'Ranking'),
           NavigationDestination(icon: Icon(Icons.upload_file), label: 'Importar'),
         ],
         onDestinationSelected: _onItemTapped,

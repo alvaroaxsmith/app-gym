@@ -44,11 +44,11 @@ Future<void> main() async {
     anonKey: supabaseAnonKey,
     authOptions: const FlutterAuthClientOptions(autoRefreshToken: true),
   );
-  runApp(const WorkoutLoggerApp());
+  runApp(const ConstruindoFibraApp());
 }
 
-class WorkoutLoggerApp extends StatelessWidget {
-  const WorkoutLoggerApp({super.key});
+class ConstruindoFibraApp extends StatelessWidget {
+  const ConstruindoFibraApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +59,7 @@ class WorkoutLoggerApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp(
-        title: 'Workout Logger',
+        title: 'Construindo Fibra',
         theme: AppTheme.light,
         home: const AuthGate(),
       ),

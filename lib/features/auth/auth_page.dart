@@ -46,7 +46,7 @@ class _AuthPageState extends State<AuthPage> with SingleTickerProviderStateMixin
                   children: [
                     Icon(Icons.fitness_center, size: 48, color: colorScheme.primary),
                     const SizedBox(height: 12),
-                    Text('Workout Logger', style: Theme.of(context).textTheme.headlineSmall),
+                    Text('Construindo Fibra', style: Theme.of(context).textTheme.headlineSmall),
                     const SizedBox(height: 16),
                     TabBar(
                       controller: _tabController,
