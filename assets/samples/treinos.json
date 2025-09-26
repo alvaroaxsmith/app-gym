@@ -1,0 +1,36 @@
+[
+  {
+    "date": "2025-10-20",
+    "exercises": [
+      {
+        "name": "Supino Reto",
+        "muscle_group": "Peito",
+        "sets": 4,
+        "reps": "10",
+        "weight_kg": 80,
+        "rest_seconds": 60
+      },
+      {
+        "name": "Crucifixo Inclinado",
+        "muscle_group": "Peito",
+        "sets": 3,
+        "reps": "12",
+        "weight_kg": 20,
+        "rest_seconds": 45
+      }
+    ]
+  },
+  {
+    "date": "2025-10-21",
+    "exercises": [
+      {
+        "name": "Agachamento Livre",
+        "muscle_group": "Perna",
+        "sets": 5,
+        "reps": "8",
+        "weight_kg": 100,
+        "rest_seconds": 90
+      }
+    ]
+  }
+]
