@@ -33,11 +33,6 @@ SUPABASE_ANON_KEY=your-anon-key
 
 3. Habilite a verificação de e-mail (opcional) e configure o template de recuperação de senha para apontar para a URL do seu app.
 
-> Dúvidas sobre Supabase e deploy? Veja:
->
-> - [`docs/supabase_deploy.md`](docs/supabase_deploy.md) para configurar o backend.
-> - [`docs/vercel_deploy.md`](docs/vercel_deploy.md) para publicar na Vercel.
-
 ## ▶️ Executando localmente
 
 ```bash
@@ -69,4 +64,4 @@ supabase/              # schema SQL
 
 ## 📄 Licença
 
-Distribuído sob a licença MIT. Consulte `LICENSE` (adicionar conforme necessário).
+Distribuído sob a licença MIT.
