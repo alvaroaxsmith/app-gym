@@ -66,7 +66,7 @@ class WorkoutRepository {
       row = await _client
           .from('workouts')
           .update(payload)
-          .eq('id', workout.id)
+      .eq('id', workout.id!)
           .select('id, user_id, date')
           .single();
     }

@@ -215,52 +215,57 @@ class _DetailsSection extends StatelessWidget {
             if (workout == null)
               const Text('Nenhum treino registrado para este dia.')
             else
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text('Volume total: ${workout.totalVolume.toStringAsFixed(0)} kg'),
-                  const SizedBox(height: 12),
-                  ...workout.exercises.map(
-                    (exercise) => Card(
-                      child: ListTile(
-                        title: Text(exercise.name),
-                        subtitle: Text('${exercise.muscleGroup} • ${exercise.sets}x${exercise.reps} • ${exercise.weightKg}kg'),
-                        trailing: Text('${exercise.restSeconds}s'),
+              Builder(
+                builder: (context) {
+                  final currentWorkout = workout!;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text('Volume total: ${currentWorkout.totalVolume.toStringAsFixed(0)} kg'),
+                      const SizedBox(height: 12),
+                      ...currentWorkout.exercises.map(
+                        (exercise) => Card(
+                          child: ListTile(
+                            title: Text(exercise.name),
+                            subtitle: Text('${exercise.muscleGroup} • ${exercise.sets}x${exercise.reps} • ${exercise.weightKg}kg'),
+                            trailing: Text('${exercise.restSeconds}s'),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  if (onDelete != null) ...[
-                    const SizedBox(height: 16),
-                    OutlinedButton.icon(
-                      onPressed: isSaving
-                          ? null
-                          : () async {
-                              final confirmed = await showDialog<bool>(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Remover treino'),
-                                  content: const Text('Tem certeza que deseja remover este treino?'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context, false),
-                                      child: const Text('Cancelar'),
+                      if (onDelete != null) ...[
+                        const SizedBox(height: 16),
+                        OutlinedButton.icon(
+                          onPressed: isSaving
+                              ? null
+                              : () async {
+                                  final confirmed = await showDialog<bool>(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Remover treino'),
+                                      content: const Text('Tem certeza que deseja remover este treino?'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(context, false),
+                                          child: const Text('Cancelar'),
+                                        ),
+                                        FilledButton(
+                                          onPressed: () => Navigator.pop(context, true),
+                                          child: const Text('Remover'),
+                                        ),
+                                      ],
                                     ),
-                                    FilledButton(
-                                      onPressed: () => Navigator.pop(context, true),
-                                      child: const Text('Remover'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                              if (confirmed == true) {
-                                await onDelete!();
-                              }
-                            },
-                      icon: const Icon(Icons.delete_outline),
-                      label: const Text('Remover treino'),
-                    ),
-                  ],
-                ],
+                                  );
+                                  if (confirmed == true) {
+                                    await onDelete!();
+                                  }
+                                },
+                          icon: const Icon(Icons.delete_outline),
+                          label: const Text('Remover treino'),
+                        ),
+                      ],
+                    ],
+                  );
+                },
               ),
           ],
         ),

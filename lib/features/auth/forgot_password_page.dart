@@ -25,10 +25,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     if (!_formKey.currentState!.validate()) return;
     final auth = context.read<AuthProvider>();
     await auth.sendPasswordReset(_emailController.text.trim());
+    if (!mounted) return;
     final error = auth.errorMessage;
-    if (error != null && context.mounted) {
+    if (error != null) {
       showSnack(context, error, isError: true);
-    } else if (context.mounted) {
+    } else {
       showSnack(context, 'E-mail de recuperação enviado.', isError: false);
     }
   }

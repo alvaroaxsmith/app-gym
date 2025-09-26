@@ -1,0 +1,8 @@
+{
+  "framework": "static",
+  "installCommand": "",
+  "buildCommand": "bash ./tool/vercel_build.sh",
+  "outputDirectory": "build/web",
+  "cleanUrls": true,
+  "trailingSlash": false
+}

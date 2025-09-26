@@ -2,24 +2,39 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/app_theme.dart';
 import 'features/auth/auth_page.dart';
 import 'features/auth/auth_provider.dart';
 import 'features/home/home_shell.dart';
 
+const _supabaseUrlDefine = String.fromEnvironment('SUPABASE_URL');
+const _supabaseAnonKeyDefine = String.fromEnvironment('SUPABASE_ANON_KEY');
+
+String? _normalizeEnv(String? value) {
+  if (value == null) return null;
+  final trimmed = value.trim();
+  return trimmed.isEmpty ? null : trimmed;
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env');
-  final supabaseUrl = dotenv.env['SUPABASE_URL'];
-  final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'];
+  await initializeDateFormatting('pt_BR');
+  await dotenv.load(fileName: '.env', isOptional: true);
+  final supabaseUrl =
+      _normalizeEnv(dotenv.env['SUPABASE_URL']) ?? _normalizeEnv(_supabaseUrlDefine);
+  final supabaseAnonKey =
+      _normalizeEnv(dotenv.env['SUPABASE_ANON_KEY']) ?? _normalizeEnv(_supabaseAnonKeyDefine);
   if (supabaseUrl == null || supabaseAnonKey == null) {
-    throw Exception('Defina SUPABASE_URL e SUPABASE_ANON_KEY no arquivo .env');
+    throw Exception(
+      'Defina SUPABASE_URL e SUPABASE_ANON_KEY no arquivo .env ou via --dart-define.',
+    );
   }
   await Supabase.initialize(
     url: supabaseUrl,
     anonKey: supabaseAnonKey,
-    authOptions: const FlutterAuthClientOptions(autoRefreshToken: true, persistSession: true),
+    authOptions: const FlutterAuthClientOptions(autoRefreshToken: true),
   );
   runApp(const WorkoutLoggerApp());
 }

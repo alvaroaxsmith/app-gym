@@ -31,18 +31,17 @@ SUPABASE_URL=https://your-project-ref.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
 ```
 
-3. Configure o banco no Supabase:
+3. Habilite a verificação de e-mail (opcional) e configure o template de recuperação de senha para apontar para a URL do seu app.
 
-```sql
--- Copie o conteúdo de supabase/schema.sql e execute no SQL Editor do Supabase
-```
-
-4. Habilite a verificação de e-mail (opcional) e configure o template de recuperação de senha para apontar para a URL do seu app.
+> Dúvidas sobre Supabase e deploy? Veja:
+>
+> - [`docs/supabase_deploy.md`](docs/supabase_deploy.md) para configurar o backend.
+> - [`docs/vercel_deploy.md`](docs/vercel_deploy.md) para publicar na Vercel.
 
 ## ▶️ Executando localmente
 
 ```bash
-flutter run -d chrome
+flutter run -d web-server
 ```
 
 ## 🧪 Testes rápidos
@@ -51,19 +50,6 @@ flutter run -d chrome
 flutter test
 ```
 
-## 📦 Build para deploy
-
-```bash
-flutter build web
-```
-
-O diretório `build/web` pode ser publicado em serviços como Netlify, Vercel (usando adaptador), Firebase Hosting ou GitHub Pages.
-
-## 🔁 Fluxo de Deploy sugerido
-
-- Fork/branch principal com revisão via pull request
-- GitHub Actions (`.github/workflows/ci.yml`) executa testes e build Web
-- Deploy automatizado para serviço de hospedagem estática usando token/secrets (configure conforme seu provedor)
 
 ## 📂 Estrutura principal
 
@@ -80,13 +66,6 @@ lib/
 assets/samples/        # arquivos de importação de exemplo
 supabase/              # schema SQL
 ```
-
-## 🗺️ Roadmap sugerido
-
-1. Ajustar UI e validar fluxo com usuários
-2. Integrar analytics/breadcrumbs
-3. Adicionar notificações ou lembretes de treino
-4. Melhorar experiência offline com caching local
 
 ## 📄 Licença
 

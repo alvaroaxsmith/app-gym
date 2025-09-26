@@ -15,7 +15,7 @@ dependencies:
   file_picker: ^6.1.1
   csv: ^5.0.2
   fl_chart: ^0.66.2
-  intl: ^0.18.1
+  intl: ^0.20.2
   flutter_dotenv: ^5.1.0
 
 dev_dependencies:

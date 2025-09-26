@@ -40,41 +40,43 @@ class _AuthPageState extends State<AuthPage> with SingleTickerProviderStateMixin
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.fitness_center, size: 48, color: colorScheme.primary),
-                  const SizedBox(height: 12),
-                  Text('Workout Logger', style: Theme.of(context).textTheme.headlineSmall),
-                  const SizedBox(height: 16),
-                  TabBar(
-                    controller: _tabController,
-                    tabs: const [
-                      Tab(text: 'Entrar'),
-                      Tab(text: 'Criar conta'),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    height: 360,
-                    child: TabBarView(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.fitness_center, size: 48, color: colorScheme.primary),
+                    const SizedBox(height: 12),
+                    Text('Workout Logger', style: Theme.of(context).textTheme.headlineSmall),
+                    const SizedBox(height: 16),
+                    TabBar(
                       controller: _tabController,
-                      children: const [
-                        _LoginForm(),
-                        _SignUpForm(),
+                      tabs: const [
+                        Tab(text: 'Entrar'),
+                        Tab(text: 'Criar conta'),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: () async {
-                      await Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
-                      );
-                    },
-                    child: const Text('Esqueci minha senha'),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 360,
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: const [
+                          _LoginForm(),
+                          _SignUpForm(),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: () async {
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
+                        );
+                      },
+                      child: const Text('Esqueci minha senha'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -110,8 +112,9 @@ class _LoginFormState extends State<_LoginForm> {
       email: _emailController.text.trim(),
       password: _passwordController.text,
     );
+    if (!mounted) return;
     final error = auth.errorMessage;
-    if (error != null && context.mounted) {
+    if (error != null) {
       showSnack(context, error, isError: true);
     }
   }
@@ -193,13 +196,12 @@ class _SignUpFormState extends State<_SignUpForm> {
       email: _emailController.text.trim(),
       password: _passwordController.text,
     );
+    if (!mounted) return;
     final error = auth.errorMessage;
-    if (error != null && context.mounted) {
+    if (error != null) {
       showSnack(context, error, isError: true);
     } else {
-      if (context.mounted) {
-        showSnack(context, 'Conta criada! Verifique seu e-mail para confirmar.', isError: false);
-      }
+      showSnack(context, 'Conta criada! Verifique seu e-mail para confirmar.', isError: false);
     }
   }
 
