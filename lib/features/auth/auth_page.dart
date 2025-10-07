@@ -127,6 +127,7 @@ class _LoginFormState extends State<_LoginForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const SizedBox(height: 8),
           TextFormField(
             controller: _emailController,
             decoration: const InputDecoration(labelText: 'E-mail'),
@@ -138,7 +139,7 @@ class _LoginFormState extends State<_LoginForm> {
               return null;
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
           TextFormField(
             controller: _passwordController,
             decoration: const InputDecoration(labelText: 'Senha'),
@@ -213,6 +214,7 @@ class _SignUpFormState extends State<_SignUpForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const SizedBox(height: 8),
           TextFormField(
             controller: _nameController,
             decoration: const InputDecoration(labelText: 'Nome completo'),
@@ -223,7 +225,7 @@ class _SignUpFormState extends State<_SignUpForm> {
               return null;
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
           TextFormField(
             controller: _emailController,
             decoration: const InputDecoration(labelText: 'E-mail'),
@@ -235,7 +237,7 @@ class _SignUpFormState extends State<_SignUpForm> {
               return null;
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
           TextFormField(
             controller: _passwordController,
             decoration: const InputDecoration(labelText: 'Senha'),
