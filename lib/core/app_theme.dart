@@ -10,6 +10,7 @@ class AppTheme {
       ),
       inputDecorationTheme: const InputDecorationTheme(
         border: OutlineInputBorder(),
+        floatingLabelBehavior: FloatingLabelBehavior.auto,
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
