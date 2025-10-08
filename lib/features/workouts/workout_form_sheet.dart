@@ -182,13 +182,19 @@ class _WorkoutFormSheetState extends State<WorkoutFormSheet> {
                                   Expanded(
                                     child: TextFormField(
                                       controller: item.weight,
-                                      decoration: const InputDecoration(labelText: 'Peso (kg)'),
+                                      decoration: const InputDecoration(
+                                        labelText: 'Peso (kg)',
+                                        helperText: 'Ex: 0.5 ou 10',
+                                      ),
                                       keyboardType:
                                           const TextInputType.numberWithOptions(decimal: true, signed: false),
                                       validator: (value) {
                                         final parsed = double.tryParse(value ?? '');
-                                        if (parsed == null || parsed < 0) {
-                                          return 'Inválido';
+                                        if (parsed == null) {
+                                          return 'Valor inválido';
+                                        }
+                                        if (parsed < 0) {
+                                          return 'Deve ser >= 0';
                                         }
                                         return null;
                                       },
@@ -246,7 +252,7 @@ class _ExerciseFormData {
         muscleGroup = kMuscleGroups.first,
         sets = TextEditingController(text: '3'),
         reps = TextEditingController(text: '10'),
-        weight = TextEditingController(text: '0'),
+        weight = TextEditingController(),
         rest = TextEditingController(text: '60');
 
   _ExerciseFormData.fromExercise(ExerciseEntry exercise)

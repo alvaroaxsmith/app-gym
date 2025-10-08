@@ -254,10 +254,13 @@ class _RankingPageState extends State<RankingPage> {
   String _formatVolume(double volume) {
     if (volume >= 1000000) {
       return '${(volume / 1000000).toStringAsFixed(1)}M';
-    } else if (volume >= 1000) {
+    }
+    if (volume >= 1000) {
       return '${(volume / 1000).toStringAsFixed(1)}K';
-    } else {
+    }
+    if (volume >= 1) {
       return volume.toStringAsFixed(0);
     }
+    return volume.toStringAsFixed(1);
   }
 }
