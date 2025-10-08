@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/ui_helpers.dart';
 import '../auth/auth_provider.dart';
 import '../dashboard/dashboard_page.dart';
+import '../exercises/exercise_library_page.dart';
 import '../imports/import_workouts_page.dart';
 import '../ranking/ranking_page.dart';
 import '../workouts/workouts_calendar_page.dart';
@@ -20,6 +21,7 @@ class _HomeShellState extends State<HomeShell> {
 
   final _pages = const [
     WorkoutsCalendarPage(),
+    ExerciseLibraryPage(),
     DashboardPage(),
     RankingPage(),
     ImportWorkoutsPage(),
@@ -27,6 +29,7 @@ class _HomeShellState extends State<HomeShell> {
 
   final _titles = const [
     'Calendário',
+    'Meus Exercícios',
     'Dashboard',
     'Ranking',
     'Importar',
@@ -65,6 +68,7 @@ class _HomeShellState extends State<HomeShell> {
         selectedIndex: _index,
         destinations: const [
           NavigationDestination(icon: Icon(Icons.calendar_month), label: 'Calendário'),
+          NavigationDestination(icon: Icon(Icons.fitness_center), label: 'Exercícios'),
           NavigationDestination(icon: Icon(Icons.leaderboard), label: 'Dashboard'),
           NavigationDestination(icon: Icon(Icons.emoji_events), label: 'Ranking'),
           NavigationDestination(icon: Icon(Icons.upload_file), label: 'Importar'),

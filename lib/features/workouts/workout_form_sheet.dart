@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../models/exercise_entry.dart';
+import '../../models/exercise_library_item.dart';
+import '../../models/exercise_template.dart';
+import '../exercises/exercise_library_picker_modal.dart';
+import 'widgets/exercise_name_autocomplete.dart';
 
 class WorkoutFormSheet extends StatefulWidget {
   const WorkoutFormSheet({super.key, required this.initialExercises});
@@ -39,6 +43,29 @@ class _WorkoutFormSheetState extends State<WorkoutFormSheet> {
     setState(() {
       _items.add(_ExerciseFormData());
     });
+  }
+
+  Future<void> _addExerciseFromLibrary() async {
+    final result = await showModalBottomSheet<ExerciseLibraryItem>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => const ExerciseLibraryPickerModal(),
+    );
+
+    if (result != null) {
+      setState(() {
+        _items.add(_ExerciseFormData.fromLibraryItem(result));
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${result.name} adicionado'),
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   void _removeExercise(int index) {
@@ -120,9 +147,34 @@ class _WorkoutFormSheetState extends State<WorkoutFormSheet> {
                                 ],
                               ),
                               const SizedBox(height: 8),
-                              TextFormField(
+                              ExerciseNameAutocomplete(
                                 controller: item.name,
-                                decoration: const InputDecoration(labelText: 'Nome do exercício'),
+                                onExerciseSelected: (template) {
+                                  if (template != null) {
+                                    setState(() {
+                                      item.muscleGroup = template.muscleGroup;
+                                      if (template.lastSets != null) {
+                                        item.sets.text = template.lastSets.toString();
+                                      }
+                                      if (template.lastReps != null) {
+                                        item.reps.text = template.lastReps!;
+                                      }
+                                      if (template.lastWeightKg != null) {
+                                        item.weight.text = template.lastWeightKg.toString();
+                                      }
+                                      if (template.lastRestSeconds != null) {
+                                        item.rest.text = template.lastRestSeconds.toString();
+                                      }
+                                    });
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Valores preenchidos do último treino'),
+                                        duration: const Duration(seconds: 2),
+                                        behavior: SnackBarBehavior.floating,
+                                      ),
+                                    );
+                                  }
+                                },
                                 validator: (value) {
                                   if (value == null || value.trim().isEmpty) {
                                     return 'Informe o nome';
@@ -224,10 +276,24 @@ class _WorkoutFormSheetState extends State<WorkoutFormSheet> {
                     },
                   ),
                   const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    onPressed: _addExercise,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Adicionar exercício'),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _addExercise,
+                          icon: const Icon(Icons.add),
+                          label: const Text('Adicionar manualmente'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton.tonalIcon(
+                          onPressed: _addExerciseFromLibrary,
+                          icon: const Icon(Icons.library_books),
+                          label: const Text('Da biblioteca'),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   FilledButton.icon(
@@ -262,6 +328,14 @@ class _ExerciseFormData {
         reps = TextEditingController(text: exercise.reps),
         weight = TextEditingController(text: exercise.weightKg.toString()),
         rest = TextEditingController(text: exercise.restSeconds.toString());
+
+  _ExerciseFormData.fromLibraryItem(ExerciseLibraryItem item)
+      : name = TextEditingController(text: item.name),
+        muscleGroup = item.muscleGroup,
+        sets = TextEditingController(text: '3'),
+        reps = TextEditingController(text: '10'),
+        weight = TextEditingController(),
+        rest = TextEditingController(text: '60');
 
   final TextEditingController name;
   String muscleGroup;
