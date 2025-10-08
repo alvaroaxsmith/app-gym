@@ -234,8 +234,8 @@ class _DetailsSection extends StatelessWidget {
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('${exercise.muscleGroup} • ${exercise.sets}x${exercise.reps} • ${exercise.weightKg}kg'),
-                                Text('Volume: ${exercise.volume.toStringAsFixed(0)} kg'),
+                                Text('${exercise.muscleGroup} • ${exercise.sets}x${exercise.reps} • ${_formatWeight(exercise.weightKg)}kg'),
+                                Text('Volume: ${exercise.volume.toStringAsFixed(1)} kg'),
                               ],
                             ),
                             trailing: Text('${exercise.restSeconds}s'),
@@ -282,4 +282,11 @@ class _DetailsSection extends StatelessWidget {
       ),
     );
   }
+}
+
+String _formatWeight(double weight) {
+  if (weight >= 1) {
+    return weight.toStringAsFixed(0);
+  }
+  return weight.toStringAsFixed(1);
 }
