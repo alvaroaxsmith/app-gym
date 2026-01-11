@@ -72,7 +72,7 @@ class _MyHistoryTab extends StatefulWidget {
   State<_MyHistoryTab> createState() => _MyHistoryTabState();
 }
 
-class _MyHistoryTabState extends State<_MyHistoryTab> {
+class _MyHistoryTabState extends State<_MyHistoryTab> with AutomaticKeepAliveClientMixin {
   final _repository = ExerciseLibraryRepository(Supabase.instance.client);
   final _scrollController = ScrollController();
   List<ExerciseTemplate> _exercises = [];
@@ -83,6 +83,12 @@ class _MyHistoryTabState extends State<_MyHistoryTab> {
   int _currentPage = 0;
   int _totalCount = 0;
   static const int _pageSize = 5;
+  
+  /// Timestamp da última carga para controlar refresh automático
+  DateTime? _lastLoadTime;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -96,6 +102,18 @@ class _MyHistoryTabState extends State<_MyHistoryTab> {
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
+  }
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Recarrega dados se passou mais de 30 segundos desde a última carga
+    // Isso garante que ao voltar de uma importação, os dados sejam atualizados
+    if (_lastLoadTime != null && 
+        DateTime.now().difference(_lastLoadTime!).inSeconds > 30 &&
+        !_isLoading) {
+      _loadExercises();
+    }
   }
 
   void _onScroll() {
@@ -134,6 +152,7 @@ class _MyHistoryTabState extends State<_MyHistoryTab> {
           _exercises = exercises;
           _totalCount = count;
           _isLoading = false;
+          _lastLoadTime = DateTime.now();
         });
       }
     } catch (e) {
@@ -179,6 +198,7 @@ class _MyHistoryTabState extends State<_MyHistoryTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // Necessário para AutomaticKeepAliveClientMixin
     return RefreshIndicator(
       onRefresh: _loadExercises,
       child: Column(

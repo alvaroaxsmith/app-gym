@@ -18,14 +18,9 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
-
-  final _pages = const [
-    WorkoutsCalendarPage(),
-    ExerciseLibraryPage(),
-    DashboardPage(),
-    RankingPage(),
-    ImportWorkoutsPage(),
-  ];
+  
+  // Key para forçar rebuild da página de exercícios quando necessário
+  final _exerciseLibraryKey = GlobalKey<State>();
 
   final _titles = const [
     'Calendário',
@@ -35,9 +30,24 @@ class _HomeShellState extends State<HomeShell> {
     'Importar',
   ];
 
+  List<Widget> get _pages => [
+    const WorkoutsCalendarPage(),
+    ExerciseLibraryPage(key: _exerciseLibraryKey),
+    const DashboardPage(),
+    const RankingPage(),
+    ImportWorkoutsPage(onImportSuccess: _navigateToExercisesAfterImport),
+  ];
+
   void _onItemTapped(int newIndex) {
     setState(() {
       _index = newIndex;
+    });
+  }
+
+  /// Navega para a aba de exercícios após importação bem-sucedida
+  void _navigateToExercisesAfterImport() {
+    setState(() {
+      _index = 1; // Índice da aba "Meus Exercícios"
     });
   }
 

@@ -11,7 +11,10 @@ import '../../models/workout.dart';
 import '../workouts/workout_repository.dart';
 
 class ImportWorkoutsPage extends StatefulWidget {
-  const ImportWorkoutsPage({super.key});
+  const ImportWorkoutsPage({super.key, this.onImportSuccess});
+
+  /// Callback chamado após uma importação bem-sucedida
+  final VoidCallback? onImportSuccess;
 
   @override
   State<ImportWorkoutsPage> createState() => _ImportWorkoutsPageState();
@@ -50,6 +53,9 @@ class _ImportWorkoutsPageState extends State<ImportWorkoutsPage> {
             'Importação concluída: ${workouts.length} treinos e ${workouts.fold<int>(0, (sum, w) => sum + w.exercises.length)} exercícios.';
       });
       showSnack(context, 'Importação concluída com sucesso!');
+      
+      // Navegar para a página de exercícios após importação bem-sucedida
+      widget.onImportSuccess?.call();
     } catch (err) {
       if (!mounted) return;
       showSnack(context, 'Falha na importação. Verifique o arquivo.', isError: true);
@@ -223,6 +229,12 @@ class _ImportWorkoutsPageState extends State<ImportWorkoutsPage> {
                   .textTheme
                   .bodyMedium
                   ?.copyWith(color: Theme.of(context).colorScheme.primary),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: () => widget.onImportSuccess?.call(),
+              icon: const Icon(Icons.fitness_center),
+              label: const Text('Ver Meus Exercícios'),
             ),
           ],
         ],
