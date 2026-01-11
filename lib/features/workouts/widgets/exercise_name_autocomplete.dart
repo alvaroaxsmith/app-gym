@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../models/custom_exercise.dart';
 import '../../../models/exercise_template.dart';
+import '../../exercises/custom_exercise_repository.dart';
 import '../../exercises/exercise_library_repository.dart';
 
 class ExerciseNameAutocomplete extends StatefulWidget {
@@ -20,9 +22,26 @@ class ExerciseNameAutocomplete extends StatefulWidget {
   State<ExerciseNameAutocomplete> createState() => _ExerciseNameAutocompleteState();
 }
 
+class _ExerciseSuggestion {
+  final String name;
+  final String? muscleGroup;
+  final int usageCount;
+  final bool isCustom;
+  final ExerciseTemplate? template;
+
+  _ExerciseSuggestion({
+    required this.name,
+    this.muscleGroup,
+    required this.usageCount,
+    required this.isCustom,
+    this.template,
+  });
+}
+
 class _ExerciseNameAutocompleteState extends State<ExerciseNameAutocomplete> {
   final _repository = ExerciseLibraryRepository(Supabase.instance.client);
-  List<ExerciseTemplate> _suggestions = [];
+  final _customRepository = CustomExerciseRepository(Supabase.instance.client);
+  List<_ExerciseSuggestion> _suggestions = [];
   bool _isLoading = false;
 
   @override
@@ -34,8 +53,28 @@ class _ExerciseNameAutocompleteState extends State<ExerciseNameAutocomplete> {
   Future<void> _loadSuggestions() async {
     try {
       final suggestions = await _repository.fetchUserExercises();
+      final customExercises = await _customRepository.fetchUserCustomExercises();
+      
       if (mounted) {
-        setState(() => _suggestions = suggestions);
+        setState(() {
+          _suggestions = [
+            // Custom exercises first
+            ...customExercises.map((e) => _ExerciseSuggestion(
+              name: e.name,
+              muscleGroup: e.muscleGroup,
+              usageCount: 0, // Custom exercises don't have usage count yet
+              isCustom: true,
+            )),
+            // Then history exercises
+            ...suggestions.map((e) => _ExerciseSuggestion(
+              name: e.name,
+              muscleGroup: e.muscleGroup,
+              usageCount: e.usageCount,
+              isCustom: false,
+              template: e,
+            )),
+          ];
+        });
       }
     } catch (e) {
       // Silently fail - autocomplete is optional
@@ -44,10 +83,10 @@ class _ExerciseNameAutocompleteState extends State<ExerciseNameAutocomplete> {
 
   @override
   Widget build(BuildContext context) {
-    return Autocomplete<ExerciseTemplate>(
+    return Autocomplete<_ExerciseSuggestion>(
       optionsBuilder: (TextEditingValue textEditingValue) {
         if (textEditingValue.text.isEmpty) {
-          return const Iterable<ExerciseTemplate>.empty();
+          return const Iterable<_ExerciseSuggestion>.empty();
         }
         
         final lowerQuery = textEditingValue.text.toLowerCase();
@@ -55,7 +94,7 @@ class _ExerciseNameAutocompleteState extends State<ExerciseNameAutocomplete> {
           return exercise.name.toLowerCase().contains(lowerQuery);
         });
       },
-      displayStringForOption: (ExerciseTemplate option) => option.name,
+      displayStringForOption: (_ExerciseSuggestion option) => option.name,
       fieldViewBuilder: (
         BuildContext context,
         TextEditingController fieldController,
@@ -93,14 +132,14 @@ class _ExerciseNameAutocompleteState extends State<ExerciseNameAutocomplete> {
           onFieldSubmitted: (value) => onFieldSubmitted(),
         );
       },
-      onSelected: (ExerciseTemplate selection) {
+      onSelected: (_ExerciseSuggestion selection) {
         widget.controller.text = selection.name;
-        widget.onExerciseSelected(selection);
+        widget.onExerciseSelected(selection.template);
       },
       optionsViewBuilder: (
         BuildContext context,
-        AutocompleteOnSelected<ExerciseTemplate> onSelected,
-        Iterable<ExerciseTemplate> options,
+        AutocompleteOnSelected<_ExerciseSuggestion> onSelected,
+        Iterable<_ExerciseSuggestion> options,
       ) {
         return Align(
           alignment: Alignment.topLeft,
@@ -114,12 +153,18 @@ class _ExerciseNameAutocompleteState extends State<ExerciseNameAutocomplete> {
                 shrinkWrap: true,
                 itemCount: options.length,
                 itemBuilder: (BuildContext context, int index) {
-                  final ExerciseTemplate option = options.elementAt(index);
+                  final _ExerciseSuggestion option = options.elementAt(index);
                   return ListTile(
-                    leading: const Icon(Icons.fitness_center, size: 20),
+                    leading: Icon(
+                      option.isCustom ? Icons.star : Icons.fitness_center,
+                      size: 20,
+                      color: option.isCustom ? Colors.amber : null,
+                    ),
                     title: Text(option.name),
                     subtitle: Text(
-                      '${option.muscleGroup} • Usado ${option.usageCount}x',
+                      option.isCustom
+                          ? '${option.muscleGroup} • Personalizado'
+                          : '${option.muscleGroup} • Usado ${option.usageCount}x',
                       style: const TextStyle(fontSize: 12),
                     ),
                     dense: true,

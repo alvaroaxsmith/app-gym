@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/ui_helpers.dart';
+import '../../models/custom_exercise.dart';
 import '../../models/exercise_entry.dart';
 import '../../models/exercise_library_item.dart';
 import '../../models/exercise_template.dart';
@@ -10,6 +11,8 @@ import '../../models/workout.dart';
 import '../workouts/workout_form_sheet.dart';
 import '../workouts/workout_provider.dart';
 import '../workouts/workout_repository.dart';
+import 'create_custom_exercise_modal.dart';
+import 'custom_exercise_repository.dart';
 import 'exercise_detail_page.dart';
 import 'exercise_library_database_repository.dart';
 import 'exercise_library_repository.dart';
@@ -532,8 +535,10 @@ class _ExerciseLibraryTab extends StatefulWidget {
 
 class _ExerciseLibraryTabState extends State<_ExerciseLibraryTab> {
   final _repository = ExerciseLibraryDatabaseRepository(Supabase.instance.client);
+  final _customRepository = CustomExerciseRepository(Supabase.instance.client);
   final _scrollController = ScrollController();
   List<ExerciseLibraryItem> _exercises = [];
+  List<CustomExercise> _customExercises = [];
   String? _selectedMuscleGroup;
   String _searchQuery = '';
   bool _isLoading = true;
@@ -584,9 +589,16 @@ class _ExerciseLibraryTabState extends State<_ExerciseLibraryTab> {
       _isLoading = true;
       _currentPage = 0;
       _exercises = [];
+      _customExercises = [];
     });
 
     try {
+      // Load custom exercises
+      final customExercises = await _customRepository.fetchUserCustomExercises(
+        searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
+        muscleGroup: _selectedMuscleGroup,
+      );
+
       final count = await _repository.countExercises(
         muscleGroup: _selectedMuscleGroup,
         searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
@@ -601,6 +613,7 @@ class _ExerciseLibraryTabState extends State<_ExerciseLibraryTab> {
 
       if (mounted) {
         setState(() {
+          _customExercises = customExercises;
           _exercises = exercises;
           _totalCount = count;
           _isLoading = false;
@@ -645,6 +658,64 @@ class _ExerciseLibraryTabState extends State<_ExerciseLibraryTab> {
 
   void _onFilterChanged() {
     _loadExercises();
+  }
+
+  Future<void> _showCreateCustomExerciseModal() async {
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => const CreateCustomExerciseModal(),
+    );
+    
+    if (result == true) {
+      _loadExercises();
+    }
+  }
+
+  Future<void> _showEditCustomExerciseModal(CustomExercise exercise) async {
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => CreateCustomExerciseModal(existingExercise: exercise),
+    );
+    
+    if (result == true) {
+      _loadExercises();
+    }
+  }
+
+  Future<void> _deleteCustomExercise(CustomExercise exercise) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Excluir exercício'),
+        content: Text('Deseja realmente excluir o exercício "${exercise.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await _customRepository.deleteCustomExercise(exercise.id);
+      _loadExercises();
+      if (mounted) {
+        showSnack(context, 'Exercício excluído com sucesso');
+      }
+    } catch (e) {
+      if (mounted) {
+        showSnack(context, 'Erro ao excluir exercício: $e', isError: true);
+      }
+    }
   }
 
   @override
@@ -706,15 +777,30 @@ class _ExerciseLibraryTabState extends State<_ExerciseLibraryTab> {
           const SizedBox(height: 8),
 
           // Results count
-          if (!_isLoading && _totalCount > 0)
+          if (!_isLoading && (_customExercises.isNotEmpty || _totalCount > 0))
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(
-                '${_exercises.length} de $_totalCount exercícios',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    _customExercises.isEmpty
+                        ? '${_exercises.length} de $_totalCount exercícios'
+                        : '${_customExercises.length} personalizados • ${_exercises.length} da biblioteca',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  FilledButton.icon(
+                    onPressed: _showCreateCustomExerciseModal,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('Criar Exercício'),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                  ),
+                ],
               ),
             ),
 
@@ -731,7 +817,7 @@ class _ExerciseLibraryTabState extends State<_ExerciseLibraryTab> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_exercises.isEmpty) {
+    if (_exercises.isEmpty && _customExercises.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -749,27 +835,171 @@ class _ExerciseLibraryTabState extends State<_ExerciseLibraryTab> {
                 color: Colors.grey[600],
               ),
             ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: _showCreateCustomExerciseModal,
+              icon: const Icon(Icons.add),
+              label: const Text('Criar Primeiro Exercício'),
+            ),
           ],
         ),
       );
     }
 
+    final totalItems = _customExercises.length + _exercises.length + (_isLoadingMore ? 1 : 0);
+
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: _exercises.length + (_isLoadingMore ? 1 : 0),
+      itemCount: totalItems,
       itemBuilder: (context, index) {
-        if (index == _exercises.length) {
-          // Loading indicator at the bottom
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Center(child: CircularProgressIndicator()),
-          );
+        // Custom exercises first
+        if (index < _customExercises.length) {
+          return _buildCustomExerciseCard(_customExercises[index]);
         }
-
-        final exercise = _exercises[index];
-        return _buildExerciseCard(exercise);
+        
+        // Then library exercises
+        final libraryIndex = index - _customExercises.length;
+        if (libraryIndex < _exercises.length) {
+          return _buildExerciseCard(_exercises[libraryIndex]);
+        }
+        
+        // Loading indicator at the bottom
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 16),
+          child: Center(child: CircularProgressIndicator()),
+        );
       },
+    );
+  }
+
+  Widget _buildCustomExerciseCard(CustomExercise exercise) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      color: colorScheme.primaryContainer.withOpacity(0.3),
+      child: InkWell(
+        onTap: () => _showEditCustomExerciseModal(exercise),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.star,
+                  color: colorScheme.onPrimaryContainer,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.star, size: 16, color: Colors.amber),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            exercise.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colorScheme.secondaryContainer,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            exercise.muscleGroup,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colorScheme.onSecondaryContainer,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Personalizado',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (exercise.description?.isNotEmpty == true) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        exercise.description!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'edit') {
+                    _showEditCustomExerciseModal(exercise);
+                  } else if (value == 'delete') {
+                    _deleteCustomExercise(exercise);
+                  }
+                },
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit, size: 20),
+                        SizedBox(width: 8),
+                        Text('Editar'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete, size: 20, color: Colors.red),
+                        SizedBox(width: 8),
+                        Text('Excluir', style: TextStyle(color: Colors.red)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
