@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -16,6 +17,17 @@ import 'custom_exercise_repository.dart';
 import 'exercise_detail_page.dart';
 import 'exercise_library_database_repository.dart';
 import 'exercise_library_repository.dart';
+
+// Custom scroll behavior para permitir arrastar em todas as plataformas
+class DragScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.stylus,
+        PointerDeviceKind.trackpad,
+      };
+}
 
 class ExerciseLibraryPage extends StatefulWidget {
   const ExerciseLibraryPage({super.key});
@@ -81,6 +93,8 @@ class _MyHistoryTabState extends State<_MyHistoryTab> with AutomaticKeepAliveCli
   List<ExerciseTemplate> _exercises = [];
   String _searchQuery = '';
   String _sortBy = 'date'; // 'date', 'name', or 'frequency'
+  String? _selectedMuscleGroup; // null = 'Todos'
+  String _selectedPeriod = 'all'; // 'week', 'month', '3months', 'year', 'all'
   bool _isLoading = true;
   bool _isLoadingMore = false;
   int _currentPage = 0;
@@ -89,6 +103,17 @@ class _MyHistoryTabState extends State<_MyHistoryTab> with AutomaticKeepAliveCli
   
   /// Timestamp da última carga para controlar refresh automático
   DateTime? _lastLoadTime;
+
+  final List<String> _muscleGroups = [
+    'Todos',
+    'Peito',
+    'Costas',
+    'Pernas',
+    'Ombros',
+    'Bíceps',
+    'Tríceps',
+    'Abdômen',
+  ];
 
   @override
   bool get wantKeepAlive => true;
@@ -139,8 +164,13 @@ class _MyHistoryTabState extends State<_MyHistoryTab> with AutomaticKeepAliveCli
     });
 
     try {
+      final dateRange = _getDateRange();
+      
       final count = await _repository.countUserExercises(
         searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
+        muscleGroup: _selectedMuscleGroup,
+        startDate: dateRange?.$1,
+        endDate: dateRange?.$2,
       );
 
       final exercises = await _repository.fetchUserExercisesPaginated(
@@ -148,6 +178,9 @@ class _MyHistoryTabState extends State<_MyHistoryTab> with AutomaticKeepAliveCli
         pageSize: _pageSize,
         searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
         sortBy: _sortBy,
+        muscleGroup: _selectedMuscleGroup,
+        startDate: dateRange?.$1,
+        endDate: dateRange?.$2,
       );
 
       if (mounted) {
@@ -172,12 +205,16 @@ class _MyHistoryTabState extends State<_MyHistoryTab> with AutomaticKeepAliveCli
     setState(() => _isLoadingMore = true);
 
     try {
+      final dateRange = _getDateRange();
       final nextPage = _currentPage + 1;
       final exercises = await _repository.fetchUserExercisesPaginated(
         page: nextPage,
         pageSize: _pageSize,
         searchQuery: _searchQuery.isEmpty ? null : _searchQuery,
         sortBy: _sortBy,
+        muscleGroup: _selectedMuscleGroup,
+        startDate: dateRange?.$1,
+        endDate: dateRange?.$2,
       );
 
       if (mounted) {
@@ -195,8 +232,173 @@ class _MyHistoryTabState extends State<_MyHistoryTab> with AutomaticKeepAliveCli
     }
   }
 
+  /// Calcula o intervalo de datas baseado no período selecionado
+  (DateTime, DateTime)? _getDateRange() {
+    if (_selectedPeriod == 'all') return null;
+    
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day, 23, 59, 59);
+    
+    switch (_selectedPeriod) {
+      case 'week':
+        return (today.subtract(const Duration(days: 7)), today);
+      case 'month':
+        return (today.subtract(const Duration(days: 30)), today);
+      case '3months':
+        return (today.subtract(const Duration(days: 90)), today);
+      case 'year':
+        return (today.subtract(const Duration(days: 365)), today);
+      default:
+        return null;
+    }
+  }
+
   void _onFilterChanged() {
     _loadExercises();
+  }
+
+  Widget _buildPeriodChip(String value, String label) {
+    final isSelected = _selectedPeriod == value;
+    return FilterChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (selected) {
+        setState(() => _selectedPeriod = value);
+        _onFilterChanged();
+      },
+    );
+  }
+
+  Widget _buildStatsCard() {
+    return FutureBuilder<ExerciseStats>(
+      future: _repository.getUserExerciseStats(
+        muscleGroup: _selectedMuscleGroup,
+        startDate: _getDateRange()?.$1,
+        endDate: _getDateRange()?.$2,
+      ),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const SizedBox.shrink();
+        }
+
+        final stats = snapshot.data!;
+        final colorScheme = Theme.of(context).colorScheme;
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Card(
+            elevation: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Estatísticas',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatItem(
+                          icon: Icons.fitness_center,
+                          label: 'Exercícios únicos',
+                          value: '${stats.totalUniqueExercises}',
+                          colorScheme: colorScheme,
+                        ),
+                      ),
+                      if (stats.mostPracticedExercise != null)
+                        Expanded(
+                          child: _buildStatItem(
+                            icon: Icons.star,
+                            label: 'Mais praticado',
+                            value: stats.mostPracticedExercise!.name,
+                            subtitle: '${stats.mostPracticedExercise!.usageCount}x',
+                            colorScheme: colorScheme,
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      if (stats.mostTrainedMuscleGroup != null)
+                        Expanded(
+                          child: _buildStatItem(
+                            icon: Icons.outlined_flag,
+                            label: 'Grupo favorito',
+                            value: stats.mostTrainedMuscleGroup!,
+                            colorScheme: colorScheme,
+                          ),
+                        ),
+                      if (stats.lastWorkoutDate != null)
+                        Expanded(
+                          child: _buildStatItem(
+                            icon: Icons.calendar_today,
+                            label: 'Última sessão',
+                            value: _formatDate(stats.lastWorkoutDate!),
+                            colorScheme: colorScheme,
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStatItem({
+    required IconData icon,
+    required String label,
+    required String value,
+    String? subtitle,
+    required ColorScheme colorScheme,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 16, color: colorScheme.primary),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        if (subtitle != null)
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey[600],
+            ),
+          ),
+      ],
+    );
   }
 
   @override
@@ -231,46 +433,135 @@ class _MyHistoryTabState extends State<_MyHistoryTab> with AutomaticKeepAliveCli
           ),
 
           // Sort options
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Text(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 16, bottom: 4),
+                child: Text(
                   'Ordenar por:',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(width: 8),
-                ChoiceChip(
-                  label: const Text('Data'),
-                  selected: _sortBy == 'date',
-                  onSelected: (selected) {
-                    setState(() => _sortBy = 'date');
-                    _onFilterChanged();
-                  },
+              ),
+              SizedBox(
+                height: 48,
+                child: ScrollConfiguration(
+                  behavior: DragScrollBehavior(),
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    children: [
+                      ChoiceChip(
+                        label: const Text('Data'),
+                        selected: _sortBy == 'date',
+                        onSelected: (selected) {
+                          setState(() => _sortBy = 'date');
+                          _onFilterChanged();
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      ChoiceChip(
+                        label: const Text('Nome'),
+                        selected: _sortBy == 'name',
+                        onSelected: (selected) {
+                          setState(() => _sortBy = 'name');
+                          _onFilterChanged();
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      ChoiceChip(
+                        label: const Text('Frequência'),
+                        selected: _sortBy == 'frequency',
+                        onSelected: (selected) {
+                          setState(() => _sortBy = 'frequency');
+                          _onFilterChanged();
+                        },
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 8),
-                ChoiceChip(
-                  label: const Text('Nome'),
-                  selected: _sortBy == 'name',
-                  onSelected: (selected) {
-                    setState(() => _sortBy = 'name');
-                    _onFilterChanged();
-                  },
-                ),
-                const SizedBox(width: 8),
-                ChoiceChip(
-                  label: const Text('Frequência'),
-                  selected: _sortBy == 'frequency',
-                  onSelected: (selected) {
-                    setState(() => _sortBy = 'frequency');
-                    _onFilterChanged();
-                  },
-                ),
-              ],
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 8),
+
+          // Muscle group filter chips
+          SizedBox(
+            height: 48,
+            child: ScrollConfiguration(
+              behavior: DragScrollBehavior(),
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: _muscleGroups.length,
+                itemBuilder: (context, index) {
+                  final group = _muscleGroups[index];
+                  final isSelected = _selectedMuscleGroup == group ||
+                      (_selectedMuscleGroup == null && group == 'Todos');
+
+                  return Padding(
+                    padding: EdgeInsets.only(right: index < _muscleGroups.length - 1 ? 8 : 0),
+                    child: FilterChip(
+                      label: Text(group),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setState(() {
+                          _selectedMuscleGroup = group == 'Todos' ? null : group;
+                        });
+                        _onFilterChanged();
+                      },
+                    ),
+                  );
+                },
+              ),
             ),
+          ),
+
+          // Period filter
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 16, top: 8, bottom: 4),
+                child: Text(
+                  'Período:',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: 48,
+                child: ScrollConfiguration(
+                  behavior: DragScrollBehavior(),
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    children: [
+                      _buildPeriodChip('week', 'Última semana'),
+                      const SizedBox(width: 8),
+                      _buildPeriodChip('month', 'Último mês'),
+                      const SizedBox(width: 8),
+                      _buildPeriodChip('3months', 'Últimos 3 meses'),
+                      const SizedBox(width: 8),
+                      _buildPeriodChip('year', 'Último ano'),
+                      const SizedBox(width: 8),
+                      _buildPeriodChip('all', 'Todo período'),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
 
           // Results count
@@ -288,6 +579,10 @@ class _MyHistoryTabState extends State<_MyHistoryTab> with AutomaticKeepAliveCli
                 ),
               ),
             ),
+
+          // Statistics card
+          if (!_isLoading && _totalCount > 0)
+            _buildStatsCard(),
 
           Expanded(
             child: _buildBody(),
@@ -417,6 +712,26 @@ class _MyHistoryTabState extends State<_MyHistoryTab> with AutomaticKeepAliveCli
                     ),
                   ),
                 ),
+                PopupMenuButton<String>(
+                  icon: Icon(Icons.more_vert, color: Colors.grey[600]),
+                  onSelected: (value) {
+                    if (value == 'delete') {
+                      _confirmDeleteExercise(exercise);
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_outline, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text('Excluir do histórico'),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
             if (exercise.lastSets != null) ...[
@@ -468,6 +783,44 @@ class _MyHistoryTabState extends State<_MyHistoryTab> with AutomaticKeepAliveCli
         ),
       ),
     );
+  }
+
+  Future<void> _confirmDeleteExercise(ExerciseTemplate exercise) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Excluir exercício'),
+        content: Text(
+          'Tem certeza que deseja excluir "${exercise.name}" do seu histórico?\n\n'
+          'Isso irá remover todas as ${exercise.usageCount} ocorrências deste exercício.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await _repository.deleteUserExercise(exercise.name);
+        if (mounted) {
+          showSnack(context, 'Exercício excluído do histórico');
+          _loadExercises(); // Reload the list
+        }
+      } catch (e) {
+        if (mounted) {
+          showSnack(context, 'Erro ao excluir exercício: $e', isError: true);
+        }
+      }
+    }
   }
 
   Widget _buildInfoChip(IconData icon, String label) {
@@ -748,30 +1101,34 @@ class _ExerciseLibraryTabState extends State<_ExerciseLibraryTab> {
             ),
           ),
           SizedBox(
-            height: 50,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _muscleGroups.length,
-              itemBuilder: (context, index) {
-                final group = _muscleGroups[index];
-                final isSelected = _selectedMuscleGroup == group ||
-                    (_selectedMuscleGroup == null && group == 'Todos');
+            height: 48,
+            child: ScrollConfiguration(
+              behavior: DragScrollBehavior(),
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: _muscleGroups.length,
+                itemBuilder: (context, index) {
+                  final group = _muscleGroups[index];
+                  final isSelected = _selectedMuscleGroup == group ||
+                      (_selectedMuscleGroup == null && group == 'Todos');
 
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: FilterChip(
-                    label: Text(group),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      setState(() {
-                        _selectedMuscleGroup = group == 'Todos' ? null : group;
-                      });
-                      _onFilterChanged();
-                    },
-                  ),
-                );
-              },
+                  return Padding(
+                    padding: EdgeInsets.only(right: index < _muscleGroups.length - 1 ? 8 : 0),
+                    child: FilterChip(
+                      label: Text(group),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setState(() {
+                          _selectedMuscleGroup = group == 'Todos' ? null : group;
+                        });
+                        _onFilterChanged();
+                      },
+                    ),
+                  );
+                },
+              ),
             ),
           ),
           const SizedBox(height: 8),

@@ -90,8 +90,8 @@ class ExerciseEntry {
 const List<String> kMuscleGroups = [
   'Peito',
   'Costas',
-  'Perna',
-  'Ombro',
+  'Pernas',
+  'Ombros',
   'Bíceps',
   'Tríceps',
   'Abdômen',

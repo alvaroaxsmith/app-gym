@@ -36,8 +36,6 @@ class _CreateCustomExerciseModalState extends State<CreateCustomExerciseModal> {
     'Bíceps',
     'Tríceps',
     'Abdômen',
-    'Cardio',
-    'Outro',
   ];
 
   @override

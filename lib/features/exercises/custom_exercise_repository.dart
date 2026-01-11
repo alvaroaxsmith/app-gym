@@ -12,11 +12,12 @@ class CustomExerciseRepository {
     String? searchQuery,
     String? muscleGroup,
   }) async {
-    var query = _client
+    final initialQuery = _client
         .from('user_custom_exercises')
         .select()
-        .eq('user_id', _client.auth.currentUser!.id)
-        .order('name', ascending: true);
+        .eq('user_id', _client.auth.currentUser!.id);
+
+    dynamic query = initialQuery;
 
     if (searchQuery != null && searchQuery.isNotEmpty) {
       query = query.ilike('name', '%$searchQuery%');
@@ -25,6 +26,8 @@ class CustomExerciseRepository {
     if (muscleGroup != null && muscleGroup.isNotEmpty && muscleGroup != 'Todos') {
       query = query.eq('muscle_group', muscleGroup);
     }
+
+    query = query.order('name', ascending: true);
 
     final response = await query;
     return (response as List<dynamic>)
@@ -99,20 +102,10 @@ class CustomExerciseRepository {
     String? searchQuery,
     String? muscleGroup,
   }) async {
-    var query = _client
-        .from('user_custom_exercises')
-        .select('id', const FetchOptions(count: CountOption.exact))
-        .eq('user_id', _client.auth.currentUser!.id);
-
-    if (searchQuery != null && searchQuery.isNotEmpty) {
-      query = query.ilike('name', '%$searchQuery%');
-    }
-
-    if (muscleGroup != null && muscleGroup.isNotEmpty && muscleGroup != 'Todos') {
-      query = query.eq('muscle_group', muscleGroup);
-    }
-
-    final response = await query.count();
-    return response.count;
+    final exercises = await fetchUserCustomExercises(
+      searchQuery: searchQuery,
+      muscleGroup: muscleGroup,
+    );
+    return exercises.length;
   }
 }
