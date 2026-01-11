@@ -19,6 +19,15 @@ fi
 
 export PATH="$FLUTTER_PATH/bin:$PATH"
 
+# Criar .env temporário vazio para satisfazer pubspec.yaml assets
+# (as variáveis reais vêm via --dart-define)
+if [[ ! -f .env ]]; then
+  echo "[vercel_build] Criando .env temporário vazio"
+  echo "# Generated for Vercel build - actual values via dart-define" > .env
+  echo "SUPABASE_URL=placeholder" >> .env
+  echo "SUPABASE_ANON_KEY=placeholder" >> .env
+fi
+
 flutter config --enable-web
 flutter --version
 flutter pub get
