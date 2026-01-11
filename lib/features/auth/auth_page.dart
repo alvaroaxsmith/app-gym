@@ -116,6 +116,8 @@ class _LoginFormState extends State<_LoginForm> {
     final error = auth.errorMessage;
     if (error != null) {
       showSnack(context, error, isError: true);
+    } else {
+      showSnack(context, 'Login realizado com sucesso!');
     }
   }
 

@@ -7,6 +7,7 @@ class ExerciseEntry {
     required this.reps,
     required this.weightKg,
     required this.restSeconds,
+    this.rpe,
   });
 
   final String? id;
@@ -16,10 +17,11 @@ class ExerciseEntry {
   final String reps;
   final double weightKg;
   final int restSeconds;
+  final double? rpe;
 
-  double get volume => sets * _repsAsNumber * weightKg;
+  double get volume => sets * repsAsNumber * weightKg;
 
-  double get _repsAsNumber {
+  double get repsAsNumber {
     final numericValue = double.tryParse(reps.trim());
     if (numericValue != null) {
       return numericValue;
@@ -43,6 +45,7 @@ class ExerciseEntry {
     String? reps,
     double? weightKg,
     int? restSeconds,
+    double? rpe,
   }) {
     return ExerciseEntry(
       id: id ?? this.id,
@@ -52,6 +55,7 @@ class ExerciseEntry {
       reps: reps ?? this.reps,
       weightKg: weightKg ?? this.weightKg,
       restSeconds: restSeconds ?? this.restSeconds,
+      rpe: rpe ?? this.rpe,
     );
   }
 
@@ -70,6 +74,7 @@ class ExerciseEntry {
       restSeconds: map['rest_seconds'] is int
           ? map['rest_seconds'] as int
           : int.tryParse(map['rest_seconds']?.toString() ?? '') ?? 0,
+      rpe: map['rpe'] != null ? (map['rpe'] as num).toDouble() : null,
     );
   }
 
@@ -83,6 +88,7 @@ class ExerciseEntry {
       'reps': reps,
       'weight_kg': weightKg,
       'rest_seconds': restSeconds,
+      'rpe': rpe,
     };
   }
 }

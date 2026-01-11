@@ -187,7 +187,7 @@ class _CreateCustomExerciseModalState extends State<CreateCustomExerciseModal> {
 
                   // Grupo muscular
                   DropdownButtonFormField<String>(
-                    value: _selectedMuscleGroup,
+                    initialValue: _selectedMuscleGroup,
                     decoration: const InputDecoration(
                       labelText: 'Grupo muscular *',
                       prefixIcon: Icon(Icons.category),

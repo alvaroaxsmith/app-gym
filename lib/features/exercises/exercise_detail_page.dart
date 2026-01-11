@@ -68,7 +68,7 @@ class _ExerciseDetailPageState extends State<ExerciseDetailPage> {
             // Image placeholder
             Container(
               height: 250,
-              color: colorScheme.surfaceVariant,
+              color: colorScheme.surfaceContainerHighest,
               child: widget.exercise.imageUrl != null
                   ? Image.network(
                       widget.exercise.imageUrl!,

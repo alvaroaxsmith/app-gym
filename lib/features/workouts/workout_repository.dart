@@ -29,10 +29,22 @@ class WorkoutRepository {
     final user = _currentUser;
     final response = await _client
         .from('workouts')
-        .select('id, user_id, date, exercises (id, name, muscle_group, sets, reps, weight_kg, rest_seconds)')
+        .select('id, user_id, date, exercises (id, name, muscle_group, sets, reps, weight_kg, rest_seconds, rpe)')
         .eq('user_id', user.id)
         .gte('date', DateFormat('yyyy-MM-dd').format(start))
         .lte('date', DateFormat('yyyy-MM-dd').format(end))
+        .order('date');
+
+    final data = response as List<dynamic>;
+    return data.map((item) => Workout.fromMap(item as Map<String, dynamic>)).toList();
+  }
+
+  Future<List<Workout>> fetchAllWorkouts() async {
+    final user = _currentUser;
+    final response = await _client
+        .from('workouts')
+        .select('id, user_id, date, exercises (id, name, muscle_group, sets, reps, weight_kg, rest_seconds, rpe)')
+        .eq('user_id', user.id)
         .order('date');
 
     final data = response as List<dynamic>;
@@ -43,7 +55,7 @@ class WorkoutRepository {
     final user = _currentUser;
     final response = await _client
         .from('workouts')
-        .select('id, user_id, date, exercises (id, name, muscle_group, sets, reps, weight_kg, rest_seconds)')
+        .select('id, user_id, date, exercises (id, name, muscle_group, sets, reps, weight_kg, rest_seconds, rpe)')
         .eq('user_id', user.id)
         .eq('date', DateFormat('yyyy-MM-dd').format(date))
         .maybeSingle();
@@ -94,7 +106,7 @@ class WorkoutRepository {
     final user = _currentUser;
     final response = await _client
         .from('workouts')
-        .select('id, user_id, date, exercises (id, name, muscle_group, sets, reps, weight_kg, rest_seconds)')
+        .select('id, user_id, date, exercises (id, name, muscle_group, sets, reps, weight_kg, rest_seconds, rpe)')
         .eq('user_id', user.id)
         .eq('id', id)
         .maybeSingle();

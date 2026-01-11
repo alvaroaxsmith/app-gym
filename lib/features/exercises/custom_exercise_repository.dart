@@ -43,7 +43,7 @@ class CustomExerciseRepository {
         .select()
         .single();
 
-    return CustomExercise.fromMap(response as Map<String, dynamic>);
+    return CustomExercise.fromMap(response);
   }
 
   /// Atualiza um exercício personalizado existente
@@ -56,7 +56,7 @@ class CustomExerciseRepository {
         .select()
         .single();
 
-    return CustomExercise.fromMap(response as Map<String, dynamic>);
+    return CustomExercise.fromMap(response);
   }
 
   /// Deleta um exercício personalizado
@@ -78,7 +78,7 @@ class CustomExerciseRepository {
         .maybeSingle();
 
     if (response == null) return null;
-    return CustomExercise.fromMap(response as Map<String, dynamic>);
+    return CustomExercise.fromMap(response);
   }
 
   /// Verifica se já existe um exercício com esse nome para o usuário

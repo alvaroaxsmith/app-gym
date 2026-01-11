@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../models/custom_exercise.dart';
 import '../../../models/exercise_template.dart';
 import '../../exercises/custom_exercise_repository.dart';
 import '../../exercises/exercise_library_repository.dart';
@@ -51,6 +50,8 @@ class _ExerciseNameAutocompleteState extends State<ExerciseNameAutocomplete> {
   }
 
   Future<void> _loadSuggestions() async {
+    if (mounted) setState(() => _isLoading = true);
+    
     try {
       final suggestions = await _repository.fetchUserExercises();
       final customExercises = await _customRepository.fetchUserCustomExercises();
@@ -78,6 +79,8 @@ class _ExerciseNameAutocompleteState extends State<ExerciseNameAutocomplete> {
       }
     } catch (e) {
       // Silently fail - autocomplete is optional
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

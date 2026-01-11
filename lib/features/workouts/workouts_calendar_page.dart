@@ -122,7 +122,7 @@ class _CalendarSection extends StatelessWidget {
           locale: 'pt_BR',
           firstDay: DateTime.utc(2022, 1, 1),
           lastDay: DateTime.utc(2030, 12, 31),
-          focusedDay: provider.selectedDate,
+          focusedDay: provider.focusedDate,
           selectedDayPredicate: (day) => isSameDay(day, provider.selectedDate),
           calendarFormat: CalendarFormat.month,
           onDaySelected: (selected, focused) {

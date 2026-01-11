@@ -12,6 +12,7 @@ class WorkoutProvider extends ChangeNotifier {
   Map<DateTime, Workout> _workoutsByDay = {};
   Workout? _selectedWorkout;
   DateTime _selectedDate = _onlyDate(DateTime.now());
+  DateTime _focusedDate = _onlyDate(DateTime.now());
   bool _isLoading = false;
   bool _isSaving = false;
   String? _errorMessage;
@@ -19,6 +20,7 @@ class WorkoutProvider extends ChangeNotifier {
   Map<DateTime, Workout> get workoutsByDay => _workoutsByDay;
   Workout? get selectedWorkout => _selectedWorkout;
   DateTime get selectedDate => _selectedDate;
+  DateTime get focusedDate => _focusedDate;
   bool get isLoading => _isLoading;
   bool get isSaving => _isSaving;
   String? get errorMessage => _errorMessage;
@@ -26,11 +28,13 @@ class WorkoutProvider extends ChangeNotifier {
   Future<void> initialize() async {
     final now = DateTime.now();
     _selectedDate = _onlyDate(now);
+    _focusedDate = _onlyDate(now);
     await loadMonth(now);
     await selectDate(now);
   }
 
   Future<void> loadMonth(DateTime month) async {
+    _focusedDate = _onlyDate(month);
     _setLoading(true);
     try {
       _workoutsByDay = await _repository.fetchWorkoutsForMonth(month);
@@ -51,6 +55,7 @@ class WorkoutProvider extends ChangeNotifier {
   Future<void> selectDate(DateTime date) async {
     final normalized = _onlyDate(date);
     _selectedDate = normalized;
+    _focusedDate = normalized;
     if (_workoutsByDay.containsKey(normalized)) {
       _selectedWorkout = _workoutsByDay[normalized];
       notifyListeners();

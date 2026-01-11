@@ -8,7 +8,6 @@ import '../../models/custom_exercise.dart';
 import '../../models/exercise_entry.dart';
 import '../../models/exercise_library_item.dart';
 import '../../models/exercise_template.dart';
-import '../../models/workout.dart';
 import '../workouts/workout_form_sheet.dart';
 import '../workouts/workout_provider.dart';
 import '../workouts/workout_repository.dart';
@@ -1235,7 +1234,7 @@ class _ExerciseLibraryTabState extends State<_ExerciseLibraryTab> {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      color: colorScheme.primaryContainer.withOpacity(0.3),
+      color: colorScheme.primaryContainer.withValues(alpha: 0.3),
       child: InkWell(
         onTap: () => _showEditCustomExerciseModal(exercise),
         borderRadius: BorderRadius.circular(12),
@@ -1519,13 +1518,34 @@ class _NewWorkoutContentState extends State<_NewWorkoutContent> {
             onPressed: provider.isSaving
                 ? null
                 : () async {
-                    final exercises = await showModalBottomSheet<List<ExerciseEntry>>(
-                      context: context,
-                      isScrollControlled: true,
-                      builder: (context) => const WorkoutFormSheet(
-                        initialExercises: [],
-                      ),
-                    );
+                    List<ExerciseEntry>? exercises;
+                    final width = MediaQuery.of(context).size.width;
+                    
+                    if (width > 600) {
+                      exercises = await showDialog<List<ExerciseEntry>>(
+                        context: context,
+                        builder: (context) => Dialog(
+                          insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 600),
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              child: WorkoutFormSheet(initialExercises: []),
+                            ),
+                          ),
+                        ),
+                      );
+                    } else {
+                      exercises = await showModalBottomSheet<List<ExerciseEntry>>(
+                        context: context,
+                        isScrollControlled: true,
+                        useSafeArea: true,
+                        builder: (context) => const WorkoutFormSheet(
+                          initialExercises: [],
+                        ),
+                      );
+                    }
 
                     if (exercises != null && exercises.isNotEmpty && mounted) {
                       // Atualiza a data selecionada no provider
@@ -1534,7 +1554,7 @@ class _NewWorkoutContentState extends State<_NewWorkoutContent> {
                       // Salva o treino
                       await provider.saveWorkout(exercises);
 
-                      if (mounted) {
+                      if (context.mounted) {
                         if (provider.errorMessage != null) {
                           showSnack(
                             context,
