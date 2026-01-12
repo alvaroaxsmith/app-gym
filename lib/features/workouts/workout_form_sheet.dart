@@ -4,6 +4,7 @@ import '../../models/exercise_entry.dart';
 import '../../models/exercise_library_item.dart';
 import '../exercises/exercise_library_picker_modal.dart';
 import 'widgets/exercise_form_dialog.dart';
+import 'widgets/exercise_timer_modal.dart';
 
 class WorkoutFormSheet extends StatefulWidget {
   const WorkoutFormSheet({super.key, required this.initialExercises});
@@ -97,6 +98,14 @@ class _WorkoutFormSheetState extends State<WorkoutFormSheet> {
     }
   }
 
+  Future<void> _openTimer(int index) async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => ExerciseTimerModal(exercise: _exercises[index]),
+    );
+  }
+
   void _removeExercise(int index) {
     setState(() {
       _exercises.removeAt(index);
@@ -175,7 +184,35 @@ class _WorkoutFormSheetState extends State<WorkoutFormSheet> {
                               icon: const Icon(Icons.delete_outline),
                               onPressed: () => _removeExercise(index),
                             ),
-                            onTap: () => _editExercise(index),
+                            onTap: () {
+                              showModalBottomSheet(
+                                context: context,
+                                builder: (ctx) => SafeArea(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      ListTile(
+                                        leading: const Icon(Icons.timer_outlined),
+                                        title: const Text('Iniciar Contagem (Descanso)'),
+                                        subtitle: const Text('Executar séries com cronômetro'),
+                                        onTap: () {
+                                          Navigator.pop(ctx);
+                                          _openTimer(index);
+                                        },
+                                      ),
+                                      ListTile(
+                                        leading: const Icon(Icons.edit_outlined),
+                                        title: const Text('Editar Detalhes'),
+                                        onTap: () {
+                                          Navigator.pop(ctx);
+                                          _editExercise(index);
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         );
                       },

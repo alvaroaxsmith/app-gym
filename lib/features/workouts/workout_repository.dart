@@ -29,7 +29,7 @@ class WorkoutRepository {
     final user = _currentUser;
     final response = await _client
         .from('workouts')
-        .select('id, user_id, date, exercises (id, name, muscle_group, sets, reps, weight_kg, rest_seconds, rpe)')
+        .select('id, user_id, date, exercises (id, name, muscle_group, sets, reps, weight_kg, rest_seconds, rpe, is_warmup, warmup_sets)')
         .eq('user_id', user.id)
         .gte('date', DateFormat('yyyy-MM-dd').format(start))
         .lte('date', DateFormat('yyyy-MM-dd').format(end))
@@ -43,7 +43,7 @@ class WorkoutRepository {
     final user = _currentUser;
     final response = await _client
         .from('workouts')
-        .select('id, user_id, date, exercises (id, name, muscle_group, sets, reps, weight_kg, rest_seconds, rpe)')
+        .select('id, user_id, date, exercises (id, name, muscle_group, sets, reps, weight_kg, rest_seconds, rpe, is_warmup, warmup_sets)')
         .eq('user_id', user.id)
         .order('date');
 
@@ -55,7 +55,7 @@ class WorkoutRepository {
     final user = _currentUser;
     final response = await _client
         .from('workouts')
-        .select('id, user_id, date, exercises (id, name, muscle_group, sets, reps, weight_kg, rest_seconds, rpe)')
+        .select('id, user_id, date, exercises (id, name, muscle_group, sets, reps, weight_kg, rest_seconds, rpe, is_warmup, warmup_sets)')
         .eq('user_id', user.id)
         .eq('date', DateFormat('yyyy-MM-dd').format(date))
         .maybeSingle();
@@ -106,7 +106,7 @@ class WorkoutRepository {
     final user = _currentUser;
     final response = await _client
         .from('workouts')
-        .select('id, user_id, date, exercises (id, name, muscle_group, sets, reps, weight_kg, rest_seconds, rpe)')
+        .select('id, user_id, date, exercises (id, name, muscle_group, sets, reps, weight_kg, rest_seconds, rpe, is_warmup, warmup_sets)')
         .eq('user_id', user.id)
         .eq('id', id)
         .maybeSingle();

@@ -510,6 +510,7 @@ class _DashboardPageState extends State<DashboardPage> {
     for (final w in _workouts) {
        if (w.date.isAfter(start)) {
           for (final e in w.exercises) {
+             if (e.isWarmup) continue;
              sets[e.muscleGroup] = (sets[e.muscleGroup] ?? 0) + e.sets;
           }
        }
@@ -662,6 +663,7 @@ class _DashboardPageState extends State<DashboardPage> {
         
         double dailyVolume = 0;
         for (final e in w.exercises) {
+          if (e.isWarmup) continue;
           if (_selectedMuscleGroup == null || e.muscleGroup == _selectedMuscleGroup) {
             dailyVolume += e.volume;
           }
@@ -683,6 +685,7 @@ class _DashboardPageState extends State<DashboardPage> {
         for (final otherW in _workouts) {
             if (otherW.date.isAfter(windowStart) && otherW.date.isBefore(windowEnd)) {
                  for (final e in otherW.exercises) {
+                    if (e.isWarmup) continue;
                     if (_selectedMuscleGroup == null || e.muscleGroup == _selectedMuscleGroup) {
                        // Filtro de Hard Sets (RPE >= 7 ou null se assumirmos que dados antigos são válidos)
                        // Lógica: Se _onlyHardSets é true, checa RPE. 

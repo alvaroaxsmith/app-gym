@@ -8,6 +8,8 @@ class ExerciseEntry {
     required this.weightKg,
     required this.restSeconds,
     this.rpe,
+    this.isWarmup = false,
+    this.warmupSets = 0,
   });
 
   final String? id;
@@ -18,6 +20,8 @@ class ExerciseEntry {
   final double weightKg;
   final int restSeconds;
   final double? rpe;
+  final bool isWarmup;
+  final int warmupSets;
 
   double get volume => sets * repsAsNumber * weightKg;
 
@@ -46,6 +50,8 @@ class ExerciseEntry {
     double? weightKg,
     int? restSeconds,
     double? rpe,
+    bool? isWarmup,
+    int? warmupSets,
   }) {
     return ExerciseEntry(
       id: id ?? this.id,
@@ -56,6 +62,8 @@ class ExerciseEntry {
       weightKg: weightKg ?? this.weightKg,
       restSeconds: restSeconds ?? this.restSeconds,
       rpe: rpe ?? this.rpe,
+      isWarmup: isWarmup ?? this.isWarmup,
+      warmupSets: warmupSets ?? this.warmupSets,
     );
   }
 
@@ -75,6 +83,10 @@ class ExerciseEntry {
           ? map['rest_seconds'] as int
           : int.tryParse(map['rest_seconds']?.toString() ?? '') ?? 0,
       rpe: map['rpe'] != null ? (map['rpe'] as num).toDouble() : null,
+      isWarmup: map['is_warmup'] as bool? ?? false,
+      warmupSets: map['warmup_sets'] is int
+          ? map['warmup_sets'] as int
+          : int.tryParse(map['warmup_sets']?.toString() ?? '') ?? 0,
     );
   }
 
@@ -89,6 +101,8 @@ class ExerciseEntry {
       'weight_kg': weightKg,
       'rest_seconds': restSeconds,
       'rpe': rpe,
+      'is_warmup': isWarmup,
+      'warmup_sets': warmupSets,
     };
   }
 }

@@ -24,6 +24,8 @@ class _ExerciseFormDialogState extends State<ExerciseFormDialog> {
   late TextEditingController _reps;
   late TextEditingController _weight;
   late TextEditingController _rest;
+  late TextEditingController _warmupSetsController; // Added
+  late bool _hasWarmupSets; // Changed logic from isWarmup to hasWarmupSets
 
   static const List<String> _kMuscleGroups = [
     'Peito',
@@ -47,6 +49,13 @@ class _ExerciseFormDialogState extends State<ExerciseFormDialog> {
     _reps = TextEditingController(text: initial?.reps ?? '10');
     _weight = TextEditingController(text: initial?.weightKg.toString());
     _rest = TextEditingController(text: initial?.restSeconds.toString() ?? '60');
+    // Se isWarmup for true (legado) ou warmupSets > 0, ativamos o switch
+    _hasWarmupSets = (initial?.isWarmup ?? false) || (initial?.warmupSets ?? 0) > 0;
+    _warmupSetsController = TextEditingController(
+      text: (initial?.warmupSets ?? 0) > 0 
+          ? initial!.warmupSets.toString() 
+          : (initial?.isWarmup ?? false ? initial!.sets.toString() : '2') // Se era 'isWarmup', usa sets como warmupSets padrão
+    );
   }
 
   @override
@@ -56,20 +65,32 @@ class _ExerciseFormDialogState extends State<ExerciseFormDialog> {
     _reps.dispose();
     _weight.dispose();
     _rest.dispose();
+    _warmupSetsController.dispose();
     super.dispose();
   }
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
+    int sets = int.parse(_sets.text);
+    int warmupSets = _hasWarmupSets ? int.parse(_warmupSetsController.text) : 0;
+
+    // Se o usuário marcou "Aquecimento" e colocou "Séries" de trabalho como 0 (permitir?),
+    // ou se ele quer apenas registrar aquecimento.
+    // Mas normalmente Sets > 0.
+    
     final exercise = ExerciseEntry(
       id: widget.initialValue?.id,
       name: _name.text.trim(),
       muscleGroup: _muscleGroup,
-      sets: int.parse(_sets.text),
+      sets: sets,
       reps: _reps.text.trim(),
       weightKg: double.parse(_weight.text),
       restSeconds: int.parse(_rest.text),
+      // isWarmup agora é false pois separamos sets de warmupSets.
+      // Mantemos compatibilidade: se Sets=0 e WarmupSets>0, tecnicamente é "isWarmup".
+      isWarmup: false, 
+      warmupSets: warmupSets,
     );
 
     widget.onSave(exercise);
@@ -211,6 +232,31 @@ class _ExerciseFormDialogState extends State<ExerciseFormDialog> {
                   ),
                 ],
               ),
+              const SizedBox(height: 12),
+              SwitchListTile(
+                title: const Text('Incluir Séries de Aquecimento'),
+                subtitle: const Text('Adiciona séries preparatórias (não contam p/ volume)'),
+                value: _hasWarmupSets,
+                onChanged: (val) => setState(() => _hasWarmupSets = val),
+                contentPadding: EdgeInsets.zero,
+              ),
+              if (_hasWarmupSets) ...[
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _warmupSetsController,
+                  decoration: const InputDecoration(
+                    labelText: 'Qtde. Séries de Aquecimento',
+                    helperText: 'Ex: 2 séries leves antes das efetivas',
+                  ),
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (!_hasWarmupSets) return null;
+                    final parsed = int.tryParse(value ?? '');
+                    if (parsed == null || parsed <= 0) return 'Inválido';
+                    return null;
+                  },
+                ),
+              ],
             ],
           ),
         ),

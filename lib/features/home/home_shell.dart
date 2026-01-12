@@ -6,6 +6,7 @@ import '../auth/auth_provider.dart';
 import '../dashboard/dashboard_page.dart';
 import '../exercises/exercise_library_page.dart';
 import '../imports/import_workouts_page.dart';
+import '../planning/planning_page.dart';
 import '../ranking/ranking_page.dart';
 import '../workouts/workouts_calendar_page.dart';
 
@@ -24,6 +25,7 @@ class _HomeShellState extends State<HomeShell> {
 
   final _titles = const [
     'Calendário',
+    'Planejamento',
     'Meus Exercícios',
     'Dashboard',
     'Ranking',
@@ -32,6 +34,7 @@ class _HomeShellState extends State<HomeShell> {
 
   List<Widget> get _pages => [
     const WorkoutsCalendarPage(),
+    const PlanningPage(),
     ExerciseLibraryPage(key: _exerciseLibraryKey),
     const DashboardPage(),
     const RankingPage(),
@@ -47,7 +50,7 @@ class _HomeShellState extends State<HomeShell> {
   /// Navega para a aba de exercícios após importação bem-sucedida
   void _navigateToExercisesAfterImport() {
     setState(() {
-      _index = 1; // Índice da aba "Meus Exercícios"
+      _index = 2; // Índice da aba "Meus Exercícios"
     });
   }
 
@@ -78,6 +81,7 @@ class _HomeShellState extends State<HomeShell> {
         selectedIndex: _index,
         destinations: const [
           NavigationDestination(icon: Icon(Icons.calendar_month), label: 'Calendário'),
+          NavigationDestination(icon: Icon(Icons.map), label: 'Ciclos'),
           NavigationDestination(icon: Icon(Icons.fitness_center), label: 'Exercícios'),
           NavigationDestination(icon: Icon(Icons.leaderboard), label: 'Dashboard'),
           NavigationDestination(icon: Icon(Icons.emoji_events), label: 'Ranking'),
