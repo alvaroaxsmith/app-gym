@@ -7,10 +7,19 @@ class RankingRepository {
 
   final SupabaseClient _client;
 
-  Future<List<UserRanking>> fetchUserRanking() async {
+  Future<List<UserRanking>> fetchUserRanking({
+    RankingPeriod period = RankingPeriod.weekly,
+    RankingMetric metric = RankingMetric.volume,
+  }) async {
     try {
-      // Query SQL personalizada para calcular o volume total por usuário
-      final response = await _client.rpc('get_user_ranking');
+      final (startDate, endDate) = _getDateRange(period);
+      
+      // Query SQL personalizada para calcular o ranking
+      final response = await _client.rpc('get_user_ranking', params: {
+        'p_start_date': startDate?.toIso8601String().split('T')[0],
+        'p_end_date': endDate?.toIso8601String().split('T')[0],
+        'p_order_by': metric == RankingMetric.workouts ? 'workouts' : 'volume',
+      });
       
       final data = response as List<dynamic>;
       return data
@@ -22,74 +31,33 @@ class RankingRepository {
               ))
           .toList();
     } catch (e) {
-      // Fallback: buscar dados manualmente se a function RPC não existir
-      return await _fetchUserRankingFallback();
+      // Fallback: mostrar erro ou dados locais se for allTime?
+      // Por simplicidade, mantemos fallback básico se falhar chamada
+      // mas o fallback original não filtrava datas.
+      // Se a RPC falhar por falta de parametros (migração pendente), vai cair aqui.
+      print('Erro ao buscar ranking: $e');
+      return []; 
     }
   }
 
-  Future<List<UserRanking>> _fetchUserRankingFallback() async {
-    // Para o fallback, vamos mostrar apenas o usuário atual
-    // Em uma implementação completa, seria necessário ter uma view ou 
-    // política de segurança que permita ver dados agregados de outros usuários
-    final currentUser = _client.auth.currentUser;
-    if (currentUser == null) return [];
-
-    // Buscar workouts do usuário atual
-    final workoutsResponse = await _client
-        .from('workouts')
-        .select('''
-          user_id,
-          exercises (
-            sets,
-            reps,
-            weight_kg
-          )
-        ''')
-        .eq('user_id', currentUser.id);
-
-    double totalVolume = 0;
-    int totalWorkouts = workoutsResponse.length;
-
-    for (final workout in workoutsResponse) {
-      final exercises = workout['exercises'] as List<dynamic>;
-      
-      for (final exercise in exercises) {
-        final sets = exercise['sets'] as int;
-        final reps = _parseReps(exercise['reps'] as String);
-        final weightKg = (exercise['weight_kg'] as num).toDouble();
-        
-        totalVolume += sets * reps * weightKg;
-      }
+  (DateTime?, DateTime?) _getDateRange(RankingPeriod period) {
+    final now = DateTime.now();
+    switch (period) {
+      case RankingPeriod.weekly:
+        // Segunda-feira da semana atual
+        final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+        final endOfWeek = startOfWeek.add(const Duration(days: 6));
+         return (startOfWeek, endOfWeek);
+      case RankingPeriod.monthly:
+        final startOfMonth = DateTime(now.year, now.month, 1);
+        final endOfMonth = DateTime(now.year, now.month + 1, 0);
+        return (startOfMonth, endOfMonth);
+      case RankingPeriod.allTime:
+        return (null, null);
     }
-
-    // Buscar perfil do usuário
-    final profileResponse = await _client
-        .from('profiles')
-        .select('full_name')
-        .eq('id', currentUser.id)
-        .maybeSingle();
-
-    return [
-      UserRanking(
-        userId: currentUser.id,
-        email: currentUser.email ?? '',
-        displayName: profileResponse?['full_name'] as String?,
-        totalVolume: totalVolume,
-        totalWorkouts: totalWorkouts,
-        position: 1,
-      ),
-    ];
-  }
-
-  double _parseReps(String reps) {
-    final parsed = double.tryParse(reps);
-    if (parsed != null) {
-      return parsed;
-    }
-    final match = RegExp(r"(\d+)").allMatches(reps);
-    if (match.isEmpty) {
-      return 0;
-    }
-    return double.parse(match.first.group(1)!);
   }
 }
+
+enum RankingPeriod { weekly, monthly, allTime }
+
+enum RankingMetric { volume, workouts }

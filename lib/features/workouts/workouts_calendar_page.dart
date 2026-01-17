@@ -115,9 +115,14 @@ class _CalendarSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.all(16),
+      elevation: 0, // Remove elevation to blend better or keep it if desired
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.1)),
+      ),
+      margin: EdgeInsets.zero, // Controlled by parent
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(8), // Reduced padding inside card
         child: TableCalendar<Workout>(
           locale: 'pt_BR',
           firstDay: DateTime.utc(2022, 1, 1),
@@ -125,6 +130,9 @@ class _CalendarSection extends StatelessWidget {
           focusedDay: provider.focusedDate,
           selectedDayPredicate: (day) => isSameDay(day, provider.selectedDate),
           calendarFormat: CalendarFormat.month,
+          availableCalendarFormats: const {
+            CalendarFormat.month: 'Mês',
+          },
           onDaySelected: (selected, focused) {
             provider.selectDate(selected);
           },
@@ -134,6 +142,17 @@ class _CalendarSection extends StatelessWidget {
           headerStyle: const HeaderStyle(
             formatButtonVisible: false,
             titleCentered: true,
+            titleTextStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          calendarStyle: CalendarStyle(
+            selectedDecoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
+              shape: BoxShape.circle,
+            ),
+            todayDecoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.secondary.withOpacity(0.5),
+              shape: BoxShape.circle,
+            ),
           ),
           eventLoader: (day) {
             final normalized = DateTime(day.year, day.month, day.day);
@@ -145,13 +164,15 @@ class _CalendarSection extends StatelessWidget {
             markerBuilder: (context, day, events) {
               if (events.isEmpty) return const SizedBox.shrink();
               return Positioned(
-                bottom: 4,
+                bottom: 8,
                 child: Container(
                   width: 6,
                   height: 6,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: isSameDay(day, provider.selectedDate)
+                        ? Theme.of(context).colorScheme.onPrimary
+                        : Theme.of(context).colorScheme.primary,
                   ),
                 ),
               );
@@ -182,38 +203,82 @@ class _DetailsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Format: "Segunda-feira, 12 de janeiro de 2024"
     final dateFormatted = MaterialLocalizations.of(context).formatFullDate(selectedDate);
+    
     return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Theme.of(context).dividerColor.withOpacity(0.1)),
+      ),
+      margin: EdgeInsets.zero,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               children: [
                 Expanded(
-                  child: Text(
-                    dateFormatted,
-                    style: Theme.of(context).textTheme.titleMedium,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Detalhes do Dia',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        dateFormatted,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 if (workout != null)
-                  FilledButton.icon(
+                  IconButton.filled(
                     onPressed: isSaving ? null : onEdit,
                     icon: const Icon(Icons.edit),
-                    label: const Text('Editar'),
+                    tooltip: 'Editar Treino',
                   )
                 else
                   FilledButton.icon(
                     onPressed: isSaving ? null : onCreate,
                     icon: const Icon(Icons.add),
-                    label: const Text('Novo treino'),
+                    label: const Text('Novo'),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                    ),
                   ),
               ],
             ),
-            const SizedBox(height: 16),
+            const Divider(height: 32),
             if (workout == null)
-              const Text('Nenhum treino registrado para este dia.')
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 32),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.event_busy,
+                      size: 48,
+                      color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Nenhum treino registrado',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              )
             else
               Builder(
                 builder: (context) {
@@ -225,25 +290,76 @@ class _DetailsSection extends StatelessWidget {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text('Volume total do dia: ${dailyVolume.toStringAsFixed(0)} kg'),
-                      const SizedBox(height: 12),
-                      ...currentWorkout.exercises.map(
-                        (exercise) => Card(
-                          child: ListTile(
-                            title: Text(exercise.name),
-                            subtitle: Column(
+                      // Stat Card
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.monitor_weight_outlined, 
+                              color: Theme.of(context).colorScheme.primary),
+                            const SizedBox(width: 12),
+                            Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('${exercise.muscleGroup} • ${exercise.sets}x${exercise.reps} • ${_formatWeight(exercise.weightKg)}kg'),
-                                Text('Volume: ${exercise.volume.toStringAsFixed(1)} kg'),
+                                Text(
+                                  'Volume Total',
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                                Text(
+                                  '${dailyVolume.toStringAsFixed(0)} kg',
+                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
                               ],
                             ),
-                            trailing: Text('${exercise.restSeconds}s'),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Exercícios Realizados',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: 12),
+                      ...currentWorkout.exercises.map(
+                        (exercise) => Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Theme.of(context).dividerColor.withOpacity(0.2),
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: ListTile(
+                            dense: true,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            leading: CircleAvatar(
+                              backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+                              child: Text(
+                                exercise.sets.toString(),
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                              ),
+                            ),
+                            title: Text(exercise.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                            subtitle: Text(
+                              '${exercise.reps} reps • ${_formatWeight(exercise.weightKg)}kg',
+                              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                            ),
+                            trailing: Text(
+                              '${exercise.volume.toStringAsFixed(0)}kg',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                            ),
                           ),
                         ),
                       ),
                       if (onDelete != null) ...[
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 24),
                         OutlinedButton.icon(
                           onPressed: isSaving
                               ? null
@@ -269,8 +385,12 @@ class _DetailsSection extends StatelessWidget {
                                     await onDelete!();
                                   }
                                 },
-                          icon: const Icon(Icons.delete_outline),
-                          label: const Text('Remover treino'),
+                          icon: const Icon(Icons.delete_outline, size: 18),
+                          label: const Text('Remover Registro'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Theme.of(context).colorScheme.error,
+                            side: BorderSide(color: Theme.of(context).colorScheme.error),
+                          ),
                         ),
                       ],
                     ],

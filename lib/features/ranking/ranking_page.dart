@@ -16,6 +16,8 @@ class _RankingPageState extends State<RankingPage> {
   final _repository = RankingRepository(Supabase.instance.client);
   List<UserRanking>? _rankings;
   bool _isLoading = true;
+  RankingPeriod _selectedPeriod = RankingPeriod.weekly;
+  RankingMetric _selectedMetric = RankingMetric.volume;
 
   @override
   void initState() {
@@ -24,8 +26,12 @@ class _RankingPageState extends State<RankingPage> {
   }
 
   Future<void> _loadRankings() async {
+    setState(() => _isLoading = true);
     try {
-      final rankings = await _repository.fetchUserRanking();
+      final rankings = await _repository.fetchUserRanking(
+        period: _selectedPeriod,
+        metric: _selectedMetric,
+      );
       if (mounted) {
         setState(() {
           _rankings = rankings;
@@ -44,25 +50,37 @@ class _RankingPageState extends State<RankingPage> {
 
   @override
   Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _buildFilters(),
+        Expanded(
+          child: _buildBody(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBody() {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     if (_rankings == null || _rankings!.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.emoji_events, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text(
+            const Icon(Icons.emoji_events, size: 64, color: Colors.grey),
+            const SizedBox(height: 16),
+            const Text(
               'Nenhum usuário encontrado',
               style: TextStyle(fontSize: 18, color: Colors.grey),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
-              'Comece a treinar para aparecer no ranking!',
-              style: TextStyle(color: Colors.grey),
+              _getEmptyStateMessage(),
+              style: const TextStyle(color: Colors.grey),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -78,6 +96,88 @@ class _RankingPageState extends State<RankingPage> {
           final user = _rankings![index];
           return _buildRankingCard(user);
         },
+      ),
+    );
+  }
+
+  String _getEmptyStateMessage() {
+    switch (_selectedPeriod) {
+      case RankingPeriod.weekly:
+        return 'Seja o primeiro a pontuar nesta semana!';
+      case RankingPeriod.monthly:
+        return 'Seja o primeiro a pontuar neste mês!';
+      case RankingPeriod.allTime:
+        return 'Comece a treinar para aparecer no ranking!';
+    }
+  }
+
+  Widget _buildFilters() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          _buildPeriodSelector(),
+          const SizedBox(height: 12),
+          _buildMetricSelector(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPeriodSelector() {
+    return SegmentedButton<RankingPeriod>(
+      segments: const [
+        ButtonSegment(
+          value: RankingPeriod.weekly,
+          label: Text('Semanal'),
+          icon: Icon(Icons.calendar_view_week),
+        ),
+        ButtonSegment(
+          value: RankingPeriod.monthly,
+          label: Text('Mensal'),
+          icon: Icon(Icons.calendar_month),
+        ),
+        ButtonSegment(
+          value: RankingPeriod.allTime,
+          label: Text('Geral'),
+          icon: Icon(Icons.emoji_events),
+        ),
+      ],
+      selected: {_selectedPeriod},
+      onSelectionChanged: (Set<RankingPeriod> newSelection) {
+        setState(() {
+          _selectedPeriod = newSelection.first;
+        });
+        _loadRankings();
+      },
+      showSelectedIcon: false,
+    );
+  }
+
+  Widget _buildMetricSelector() {
+    return SegmentedButton<RankingMetric>(
+      segments: const [
+        ButtonSegment(
+          value: RankingMetric.volume,
+          label: Text('Carga (kg)'),
+          icon: Icon(Icons.fitness_center),
+        ),
+        ButtonSegment(
+          value: RankingMetric.workouts,
+          label: Text('Consistência'),
+          icon: Icon(Icons.repeat),
+        ),
+      ],
+      selected: {_selectedMetric},
+      onSelectionChanged: (Set<RankingMetric> newSelection) {
+        setState(() {
+          _selectedMetric = newSelection.first;
+        });
+        _loadRankings();
+      },
+      showSelectedIcon: false,
+      style: ButtonStyle(
+        visualDensity: VisualDensity.compact,
       ),
     );
   }
@@ -134,7 +234,9 @@ class _RankingPageState extends State<RankingPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${user.totalWorkouts} treino${user.totalWorkouts != 1 ? 's' : ''}',
+                      _selectedMetric == RankingMetric.volume
+                          ? '${user.totalWorkouts} treino${user.totalWorkouts != 1 ? 's' : ''}'
+                          : '${_formatVolume(user.totalVolume)} kg',
                       style: TextStyle(
                         fontSize: 14,
                         color: user.position <= 3 ? Colors.white70 : Colors.grey[600],
@@ -144,12 +246,14 @@ class _RankingPageState extends State<RankingPage> {
                 ),
               ),
               
-              // Volume total
+              // Métrica principal (destaque)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '${_formatVolume(user.totalVolume)} kg',
+                    _selectedMetric == RankingMetric.volume
+                        ? '${_formatVolume(user.totalVolume)} kg'
+                        : '${user.totalWorkouts}',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -157,7 +261,7 @@ class _RankingPageState extends State<RankingPage> {
                     ),
                   ),
                   Text(
-                    'Volume total',
+                    _selectedMetric == RankingMetric.volume ? 'Volume total' : 'Treinos',
                     style: TextStyle(
                       fontSize: 12,
                       color: user.position <= 3 ? Colors.white70 : Colors.grey[600],

@@ -5,14 +5,29 @@
     <meta charset="UTF-8" />
     <meta content="IE=Edge" http-equiv="X-UA-Compatible" />
     <meta name="description" content="Construindo Fibra - App para registrar treinos" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <title>Construindo Fibra</title>
     <link rel="manifest" href="manifest.json" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Construindo Fibra" />
     <link rel="apple-touch-icon" href="icons/Icon-192.png" />
+    <style>
+        /* Previne o efeito de "elástico" (overscroll) no iOS e garante altura total */
+        
+        html,
+        body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            /* Importante para o Flutter controlar o scroll */
+            background-color: #ffffff;
+            /* Evita fundo branco/preto piscando no load */
+        }
+    </style>
 </head>
 
 <body>
