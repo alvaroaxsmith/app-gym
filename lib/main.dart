@@ -31,10 +31,12 @@ Future<void> main() async {
   debugPrint('Info: arquivo .env não encontrado, usando --dart-define');
   }
   
+  // Priorizar variáveis injetadas via --dart-define (CI/CD/Production)
+  // Caso não existam, fallback para arquivo .env (Desenvolvimento Local)
   final supabaseUrl =
-      _normalizeEnv(dotenv.env['SUPABASE_URL']) ?? _normalizeEnv(_supabaseUrlDefine);
+      _normalizeEnv(_supabaseUrlDefine) ?? _normalizeEnv(dotenv.env['SUPABASE_URL']);
   final supabaseAnonKey =
-      _normalizeEnv(dotenv.env['SUPABASE_ANON_KEY']) ?? _normalizeEnv(_supabaseAnonKeyDefine);
+      _normalizeEnv(_supabaseAnonKeyDefine) ?? _normalizeEnv(dotenv.env['SUPABASE_ANON_KEY']);
   if (supabaseUrl == null || supabaseAnonKey == null) {
     throw Exception(
       'Defina SUPABASE_URL e SUPABASE_ANON_KEY no arquivo .env ou via --dart-define.',

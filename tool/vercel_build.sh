@@ -24,8 +24,8 @@ export PATH="$FLUTTER_PATH/bin:$PATH"
 if [[ ! -f .env ]]; then
   echo "[vercel_build] Criando .env temporário vazio"
   echo "# Generated for Vercel build - actual values via dart-define" > .env
-  echo "SUPABASE_URL=placeholder" >> .env
-  echo "SUPABASE_ANON_KEY=placeholder" >> .env
+  # Note: Do not inject placeholder values for keys that are used in main.dart
+  # to avoid conflict with dart-define priority logic.
 fi
 
 flutter config --enable-web
