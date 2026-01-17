@@ -188,7 +188,7 @@ class _PlanDetailPageState extends State<PlanDetailPage> {
                    _buildHeader(p),
                    const SizedBox(height: 24),
                    const Text(
-                     'Estrutura do Ciclo',
+                     'Estrutura do Planejamento',
                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                    ),
                    const SizedBox(height: 8),

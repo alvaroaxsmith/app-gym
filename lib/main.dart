@@ -64,6 +64,30 @@ class ConstruindoFibraApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Construindo Fibra',
         theme: AppTheme.light,
+        builder: (context, child) {
+          final mediaQuery = MediaQuery.of(context);
+          final width = mediaQuery.size.width;
+
+          // Ajuste de escala baseado na largura da tela
+          double layoutScale = 1.0;
+          if (width < 360) {
+            layoutScale = 0.85; // Telas pequenas (ex: iPhone SE 1st gen)
+          } else if (width < 400) {
+            layoutScale = 0.93; // Telas médias-pequenas (ex: iPhone 8, alguns Androids)
+          }
+
+          // Cria um novo TextScaler que limita o tamanho máximo em telas pequenas
+          // para evitar overflow, mantendo a responsividade
+          return MediaQuery(
+            data: mediaQuery.copyWith(
+              textScaler: mediaQuery.textScaler.clamp(
+                minScaleFactor: 0.8,
+                maxScaleFactor: 1.2 * layoutScale, 
+              ),
+            ),
+            child: child!,
+          );
+        },
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,

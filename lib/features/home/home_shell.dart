@@ -81,7 +81,7 @@ class _HomeShellState extends State<HomeShell> {
         selectedIndex: _index,
         destinations: const [
           NavigationDestination(icon: Icon(Icons.calendar_month), label: 'Calendário'),
-          NavigationDestination(icon: Icon(Icons.map), label: 'Ciclos'),
+          NavigationDestination(icon: Icon(Icons.map), label: 'Planejamento'),
           NavigationDestination(icon: Icon(Icons.fitness_center), label: 'Exercícios'),
           NavigationDestination(icon: Icon(Icons.leaderboard), label: 'Dashboard'),
           NavigationDestination(icon: Icon(Icons.emoji_events), label: 'Ranking'),

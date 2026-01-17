@@ -76,7 +76,7 @@ Uma semana planejada propositalmente com cargas ou volumes menores para permitir
 6.  Dashboard atualiza com o novo volume.
 
 ### Cenário B: Criando uma Periodização
-1.  Usuário vai na aba **"Ciclos"**.
+1.  Usuário vai na aba **"Planejamento"**.
 2.  Clica em **"Novo Plano"**.
 3.  Escolhe "Hipertrofia", duração de 6 semanas, data de início "Segunda-feira".
 4.  O App gera as 6 semanas.

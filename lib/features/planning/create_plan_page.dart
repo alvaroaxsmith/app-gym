@@ -243,7 +243,7 @@ class _CreatePlanPageState extends State<CreatePlanPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Planejamento do Mesociclo',
+                'Detalhes do Planejamento',
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 8),

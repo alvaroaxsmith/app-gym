@@ -272,7 +272,7 @@ class _DashboardPageState extends State<DashboardPage> {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Cockpit de Performance'),
+          toolbarHeight: 0,
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Visão Geral', icon: Icon(Icons.dashboard)),
@@ -362,23 +362,69 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildReadinessWidget() {
-    // Mock de Prontidão (Idealmente viria de input do usuário ou wearables)
-    // Calculo simples baseado em dias sem treino (exemplo)
-    final lastWorkout = _workouts.isNotEmpty ? _workouts.last.date : DateTime.now().subtract(const Duration(days: 7));
-    final hoursSinceLast = DateTime.now().difference(lastWorkout).inHours;
+    // Cálculo avançado: Inatividade + Consistência Semanal
+    final now = DateTime.now();
     
-    double readiness = 1.0;
-    String status = 'Excelente';
-    Color color = Colors.green;
+    // 1. Dados Básicos
+    final lastWorkout = _workouts.isNotEmpty 
+        ? _workouts.last.date 
+        : now.subtract(const Duration(days: 30));
+        
+    final difference = now.difference(lastWorkout);
+    final hoursSinceLast = difference.inHours;
+    final daysSinceLast = difference.inDays;
 
-    if (hoursSinceLast < 12) {
-      readiness = 0.4;
-      status = 'Baixa (Recuperando)';
+    // 2. Consistência Recente (Últimos 7 dias)
+    final startOfWeek = now.subtract(const Duration(days: 7));
+    final workoutsLast7Days = _workouts.where((w) => w.date.isAfter(startOfWeek)).length;
+    
+    double readiness = 0.0;
+    String status = '';
+    Color color = Colors.grey;
+    String message = '';
+    String subMetric = 'Treinos nos últimos 7 dias: $workoutsLast7Days';
+
+    // 3. Lógica de Decisão (Prioridade: Recuperação > Inatividade > Consistência)
+    if (daysSinceLast > 7) {
+      // Inativo Crítico
+      readiness = 0.2;
+      status = 'Inativo / Destreino';
       color = Colors.red;
-    } else if (hoursSinceLast < 24) {
-      readiness = 0.7;
-      status = 'Moderada';
-      color = Colors.orange;
+      message = 'Você perdeu a janela de progressão semanal. Volte hoje!';
+    
+    } else if (hoursSinceLast < 16) {
+      // Recuperação Aguda (Pós-treino imediato)
+      readiness = 0.4;
+      status = 'Em Recuperação';
+      color = Colors.orangeAccent;
+      message = 'Ótimo treino! Agora descanse e se alimente.';
+      
+    } else if (daysSinceLast >= 3) {
+      // Começando a falhar na frequência (3+ dias sem ir)
+      readiness = 0.6;
+      status = 'Atenção (Frequência)';
+      color = Colors.amber;
+      message = 'Sua consistência semanal está caindo.';
+      
+    } else {
+      // Treinou recentemente (< 3 dias). Avaliar volume semanal.
+      if (workoutsLast7Days >= 3) {
+        readiness = 1.0;
+        status = 'Alta Performance';
+        color = Colors.green;
+        message = 'Consistência excelente para hipertrofia.';
+      } else if (workoutsLast7Days >= 1) {
+        readiness = 0.8;
+        status = 'Consistente';
+        color = Colors.lightGreen;
+        message = 'Bom ritmo. Mantenha o foco na progressão.';
+      } else {
+        // Caso raro: Treinou hoje mas é o único da semana
+        readiness = 0.7;
+        status = 'Início de Ciclo';
+        color = Colors.blue;
+        message = 'Primeiro da semana. Continue assim!';
+      }
     }
 
     return Card(
@@ -389,12 +435,27 @@ class _DashboardPageState extends State<DashboardPage> {
         child: Row(
           children: [
             SizedBox(
-              height: 80,
-              width: 80,
+              height: 85,
+              width: 85,
               child: Stack(
                 children: [
-                  Center(child: CircularProgressIndicator(value: readiness, strokeWidth: 8, color: color, backgroundColor: color.withOpacity(0.2))),
-                  Center(child: Text('${(readiness * 100).toInt()}%', style: const TextStyle(fontWeight: FontWeight.bold))),
+                  Center(
+                    child: CircularProgressIndicator(
+                      value: readiness, 
+                      strokeWidth: 8, 
+                      color: color, 
+                      backgroundColor: color.withOpacity(0.2)
+                    )
+                  ),
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('${(readiness * 100).toInt()}%', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                        const Text('SCORE', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                      ],
+                    )
+                  ),
                 ],
               ),
             ),
@@ -403,10 +464,16 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Prontidão Diária', style: Theme.of(context).textTheme.titleMedium),
-                  Text(status, style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: color, fontWeight: FontWeight.bold)),
+                  Text('Status do Atleta', style: Theme.of(context).textTheme.titleMedium),
+                  Text(status, style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: color, fontWeight: FontWeight.bold, fontSize: 20)),
                   const SizedBox(height: 4),
-                  Text('Baseado no descanso desde o último treino.', style: Theme.of(context).textTheme.bodySmall),
+                  Text(message, style: Theme.of(context).textTheme.bodySmall),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(4)),
+                    child: Text(subMetric, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
                 ],
               ),
             )
